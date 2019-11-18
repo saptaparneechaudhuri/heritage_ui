@@ -1,0 +1,135 @@
+<?php
+
+/**
+ * @file
+ * Test API module.
+ */
+
+/**
+ *
+ */
+function my_module_reponse($url, $method = 'GET', $params = []) {
+  $methods = [
+    'POST',
+    'GET',
+    'PUT',
+    'DELETE',
+  ];
+  $result = [];
+
+  try {
+    if (empty($url)) {
+      throw new Exception("Invalid url");
+    }
+    if (in_array(strtoupper($method), $methods) === FALSE) {
+      throw new Exception("Invalid method");
+    }
+    else {
+      // Will need a request call for GET, POST, PUT.
+      switch (strtoupper($method)) {
+        case 'GET':
+        case 'POST':
+        case 'PUT':
+        case 'DELETE':
+          //if (function_exists('my_module_call_request')) {
+            $result = my_module_call_request($url, $method, $params);
+	   //  print_r($result);exit;
+          //}
+          break;
+
+        default:
+          throw new Exception("Invalid method");
+        break;
+      }
+    }
+  }
+  catch (Exception $e) {
+    echo $e->getMessage();
+  }
+
+  return $result;
+}
+
+/**
+ *
+ */
+function my_module_call_request($requesturl, $method, $params = []) {
+
+  // Request url.
+  $url = $requesturl;
+
+  try {
+
+    // Initialized curl.
+    $ch = curl_init();
+
+    // Set header for curl request.
+    $headers = [
+      "Cache-Control: no-cache",
+      "Pragma: no-cache",
+      "Content-Type: application/json",
+    ];
+
+    // Set required setting with curl configuration.
+    curl_setopt($ch, CURLOPT_URL, $url. '?' .  http_build_query($params));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_FRESH_CONNECT, TRUE);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+    curl_setopt($ch, CURLOPT_FORBID_REUSE, 1);
+    // print("<pre>");print_r($params);exit;
+    // Pass the additional values.
+    // curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params));
+    // Close the curl connection.
+    // $info = curl_getinfo($ch)
+    $info = curl_getinfo($ch);
+    $result = curl_exec($ch);
+    // print("<pre>");print_r($result);exit;    
+    curl_close($ch);
+ 
+    return $result;
+    
+  }
+  catch (Exception $e) {
+    echo $e->getMessage();
+  }
+}
+
+/**
+ *
+ */
+function heritage_ui_theme($existing, $type, $theme, $path) {
+  return [
+    'heritage_ui' => [
+      'variables' => [
+        'pagehtml' => NULL,
+        'data' => NULL,
+      ],
+    ],
+  ];
+}
+
+
+function select_sources($arr) {
+  $res = [];
+  foreach($arr as $key => $value) {
+    if ($value > 0) {
+      $res[] = $value;
+    }
+  }
+  return $res;
+}
+
+
+/**
+ * Custom function to calculate the sublevels for a text.
+ */
+function calculate_sublevel_number($textname, $chapter_tid) {
+
+  //$chapter_tid = db_query("SELECT tid FROM `taxonomy_term_field_data` WHERE name = :chapter AND vid = :textname", [':chapter' => $chapter, 'textname' => $textname])->fetchField();
+
+  $sublevels = db_query("SELECT field_sub_levels_value FROM `taxonomy_term__field_sub_levels` WHERE entity_id = :chapterid AND bundle = :textname", [':chapterid' => $chapter_tid, ':textname' => $textname])->fetchField();
+
+  return $sublevels;
+
+}

@@ -1,0 +1,23 @@
+heritage_ui.addpage:
+  path: '/text/{textid}/page'
+  defaults: 
+    _controller: '\Drupal\heritage_ui\Controller\HeritageTextPage::getList'
+    _title: 'Heritage Text Page'
+  requirements:
+    _permission: 'access content'
+# heritage_ui.list:
+#   path: '/api/{sourceid}/status'
+#   defaults:
+#     _controller: '\Drupal\heritage_ui\Controller\HeritageTextPage::getList'
+#     _title: 'Get Content'
+#   requirements:
+#     _permission: 'access content' 
+
+
+  # ev_client_endpoint:
+  # path: '/v1/custom_endpoint'
+  # methods:  [GET]
+  # defaults:
+  #   _controller: 'Drupal\ev_client_endpoint\Controller\EvEndpoint::get'
+  # requirements:
+  #   _permission: 'access content' 
