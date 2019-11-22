@@ -84,12 +84,24 @@ class SourcesMenu extends FormBase {
       '#type' => 'hidden',
       '#value' => $textid,
     ];
+    $sourceid = [];
+    if (isset($_GET['source'])) {
+      $list = $_GET['source'];
+      $fields = explode(',', $list);
 
+      foreach ($fields as $field_name) {
+        $var = explode('_', $field_name);
+        // print_r($var);
+        $sourceid[] = $var[2];
+      }
+    }
+    // print_r($sourceid);exit;
     $form['sources_menu'] = [
       '#title' => t('Sources Menu'),
       '#type' => 'checkboxes',
-      // '#description' => t('Select the Sources.'),
+
       '#options' => $sources_menu,
+      '#default_value' => $sourceid,
     ];
 
     $form['actions']['submit'] = [
