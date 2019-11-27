@@ -85,6 +85,11 @@ class SourcesMenu extends FormBase {
       '#value' => $textid,
     ];
     $sourceid = [];
+
+    // Find the entityid of the mool shloka.
+    $moolid = db_query("SELECT id FROM `heritage_source_info` WHERE text_id = :textid AND type = :type", [':textid' => $textid, 'type' => 'moolam'])->fetchField();
+    $sourceid[] = $moolid;
+
     if (isset($_GET['source'])) {
       $list = $_GET['source'];
       $fields = explode(',', $list);
@@ -120,6 +125,9 @@ class SourcesMenu extends FormBase {
     $get = $_GET;
     // print_r($get);exit;
     $textid = $form_state->getValue('text');
+    // Textname from textid.
+    $textname = db_query("SELECT field_machine_name_value FROM `node__field_machine_name` WHERE entity_id = :textid", [':textid' => $textid])->fetchField();
+
     $params = [];
 
     // Select the sourceid from the selectes checkboxes.
@@ -134,7 +142,10 @@ class SourcesMenu extends FormBase {
     $field_name = [];
 
     foreach ($sourceid as $key => $value) {
-      $field_name[] = 'field_' . 'gita_' . $value . '_text';
+
+      // $field_name[] = 'field_' . 'gita_' . $value . '_text';
+      $field_name[] = 'field_' . $textname . '_' . $value . '_text';
+
     }
 
     // Comma in the array

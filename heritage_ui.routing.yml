@@ -2,7 +2,9 @@ heritage_ui.addpage:
   path: '/text/{textid}/page'
   defaults: 
     _controller: '\Drupal\heritage_ui\Controller\HeritageTextPage::getList'
-    _title: 'Heritage Text Page'
+    _title_callback: '\Drupal\heritage_ui\Controller\HeritageTextPage::getTitle'
+#    _title: 'Heritage Text Page'
+
   requirements:
     _permission: 'access content'
 # heritage_ui.list:
