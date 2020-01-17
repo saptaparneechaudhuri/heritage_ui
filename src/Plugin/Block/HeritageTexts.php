@@ -79,11 +79,11 @@ class HeritageTexts extends BlockBase implements ContainerFactoryPluginInterface
         // Check if the page already exists.
         // TO DO, THE NODE ID IS HARDCODED HERE
         // FIND A METHOD TO LINK THE PAGE.
-        $url = Url::fromRoute('heritage_ui.addpage', ['textid' => $available_texts[$i]->nid]);
+        $url = Url::fromRoute('heritage_ui.contentpage', ['textid' => $available_texts[$i]->nid]);
 
         $link = $this->pathLink->generate($available_texts[$i]->title, $url);
         $texts = $texts . $link . '</br></br>';
-        // $texts = $texts.$available_texts[$i]->entity_id.'</br>';
+        // $texts = $texts.$available_texts[$i]->entity_id.'</br>';.
       }
 
     }

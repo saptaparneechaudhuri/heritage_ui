@@ -1,0 +1,10 @@
+heritage_ui_library:
+  version: 1.x
+  js:
+    js/navigation.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/drupalSettings
+    - core/jquery.once
+

@@ -107,11 +107,15 @@ class SourcesMenu extends FormBase {
 
       '#options' => $sources_menu,
       '#default_value' => $sourceid,
+      '#attributes' => ['onchange' => 'this.form.submit();'],
     ];
 
     $form['actions']['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Display Content'),
+       '#attributes' => [
+      'style' => ['display: none;'],
+    ],
     ];
 
     return $form;
@@ -129,6 +133,7 @@ class SourcesMenu extends FormBase {
     $textname = db_query("SELECT field_machine_name_value FROM `node__field_machine_name` WHERE entity_id = :textid", [':textid' => $textid])->fetchField();
 
     $params = [];
+    $audio_button_flag = [];
 
     // Select the sourceid from the selectes checkboxes.
     $var1 = $form_state->getValue('sources_menu');
@@ -138,13 +143,25 @@ class SourcesMenu extends FormBase {
     $sourceid = select_sources($sources);
 
     // Redirect to the custom page.
-    $url = Url::fromRoute('heritage_ui.addpage', ['textid' => $textid]);
+    $url = Url::fromRoute('heritage_ui.contentpage', ['textid' => $textid]);
     $field_name = [];
 
     foreach ($sourceid as $key => $value) {
 
+      // Check the source type.
+      $source_type = db_query("SELECT type FROM `heritage_source_info` WHERE id = :sourceid AND text_id = :textid", [':sourceid' => $value, 'textid' => $textid])->fetchField();
+      $audio_id = db_query("SELECT id FROM `heritage_source_info` WHERE parent_id = :sourceid AND text_id = :textid AND type = :type", [':sourceid' => $value, ':textid' => $textid, 'type' => $source_type])->fetchField();
+
+      // Find out the format of the source before adding the field.
+      $format = db_query("SELECT format FROM `heritage_source_info` WHERE id =:sourceid AND text_id = :textid", [':sourceid' => $value, ':textid' => $textid])->fetchField();
+
       // $field_name[] = 'field_' . 'gita_' . $value . '_text';
-      $field_name[] = 'field_' . $textname . '_' . $value . '_text';
+      //  $field_name[] = 'field_' . $textname . '_' . $value . '_text';.
+      $field_name[] = 'field_' . $textname . '_' . $value . '_' . $format;
+
+      if ($audio_id > 0) {
+        $field_name[] = 'field_' . $textname . '_' . $audio_id . '_audio';
+      }
 
     }
 
@@ -153,7 +170,7 @@ class SourcesMenu extends FormBase {
     $list = implode(', ', $field_name);
 
     // $field_name = 'field_' . 'gita_' . $sourceid[0] . '_text';
-    // $get['source'] = $field_name;
+    // $get['source'] = $field_name;.
     $get['source'] = $list;
 
     // TODO, just attach the field name from here.

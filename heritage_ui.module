@@ -2,7 +2,8 @@
 
 /**
  * @file
- * Test API module.
+ * Heritage UI Module.
+ * Module to manage the display of heritage texts contents.
  */
 
 /**
@@ -31,10 +32,10 @@ function my_module_reponse($url, $method = 'GET', $params = []) {
         case 'POST':
         case 'PUT':
         case 'DELETE':
-          //if (function_exists('my_module_call_request')) {
-            $result = my_module_call_request($url, $method, $params);
-	   //  print_r($result);exit;
-          //}
+          // If (function_exists('my_module_call_request')) {.
+          $result = my_module_call_request($url, $method, $params);
+          // print_r($result);exit;
+          // }
           break;
 
         default:
@@ -71,7 +72,7 @@ function my_module_call_request($requesturl, $method, $params = []) {
     ];
 
     // Set required setting with curl configuration.
-    curl_setopt($ch, CURLOPT_URL, $url. '?' .  http_build_query($params));
+    curl_setopt($ch, CURLOPT_URL, $url . '?' . http_build_query($params));
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
     curl_setopt($ch, CURLOPT_FRESH_CONNECT, TRUE);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
@@ -84,11 +85,11 @@ function my_module_call_request($requesturl, $method, $params = []) {
     // $info = curl_getinfo($ch)
     $info = curl_getinfo($ch);
     $result = curl_exec($ch);
-    // print("<pre>");print_r($result);exit;    
+    // print("<pre>");print_r($result);exit;
     curl_close($ch);
- 
+
     return $result;
-    
+
   }
   catch (Exception $e) {
     echo $e->getMessage();
@@ -96,23 +97,29 @@ function my_module_call_request($requesturl, $method, $params = []) {
 }
 
 /**
- *
+ * Implements hook_theme()
  */
 function heritage_ui_theme($existing, $type, $theme, $path) {
   return [
-    'heritage_ui' => [
+    'text_content' => [
       'variables' => [
-        'pagehtml' => NULL,
         'data' => NULL,
+        // 'form' => [],
+        'audio_block' => NULL,
+        'metadata_block' => NULL,
       ],
     ],
   ];
+
+ 
 }
 
-
+/**
+ *
+ */
 function select_sources($arr) {
   $res = [];
-  foreach($arr as $key => $value) {
+  foreach ($arr as $key => $value) {
     if ($value > 0) {
       $res[] = $value;
     }
@@ -120,16 +127,17 @@ function select_sources($arr) {
   return $res;
 }
 
-
 /**
  * Custom function to calculate the sublevels for a text.
  */
 function calculate_sublevel_number($textname, $chapter_tid) {
 
-  //$chapter_tid = db_query("SELECT tid FROM `taxonomy_term_field_data` WHERE name = :chapter AND vid = :textname", [':chapter' => $chapter, 'textname' => $textname])->fetchField();
-
+  // $chapter_tid = db_query("SELECT tid FROM `taxonomy_term_field_data` WHERE name = :chapter AND vid = :textname", [':chapter' => $chapter, 'textname' => $textname])->fetchField();
   $sublevels = db_query("SELECT field_sub_levels_value FROM `taxonomy_term__field_sub_levels` WHERE entity_id = :chapterid AND bundle = :textname", [':chapterid' => $chapter_tid, ':textname' => $textname])->fetchField();
 
   return $sublevels;
 
 }
+
+
+

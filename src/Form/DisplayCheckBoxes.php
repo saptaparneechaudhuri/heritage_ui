@@ -9,7 +9,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Url;
-use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\node\Entity\Node;
 
 /**
@@ -138,7 +137,7 @@ class DisplayCheckBoxes extends FormBase {
           '#required' => TRUE,
           '#options' => $chapters,
           '#default_value' => isset($chapter_tid) ? $chapter_tid : $query[0]->tid,
-
+         // '#attributes' => ['onchange' => 'this.form.submit();'],
         ];
 
         if (isset($_GET['language'])) {
@@ -157,7 +156,7 @@ class DisplayCheckBoxes extends FormBase {
           '#title' => $this->t('Language'),
           '#required' => TRUE,
           '#languages' => LanguageInterface::STATE_CONFIGURABLE | LanguageInterface::STATE_SITE_DEFAULT,
-         // '#default_value' =>  isset($form['text_info']['fieldset']['selected_langcode']['widget']['#default_value']) ? $form['text_info']['fieldset']['selected_langcode']['widget']['#default_value'] : $langcode,
+
           '#default_value' => $langcode,
 
         // '#attributes' => ['onchange' => 'this.form.submit();'],
@@ -167,21 +166,27 @@ class DisplayCheckBoxes extends FormBase {
         // ],
         ];
 
-        // $form['actions'] = [
-        //   '#type' => 'submit',
-        //   '#value' => 'Submit',
-        // ];
+        $form['previous_chapter'] = [
+          '#type' => 'submit',
+          '#value' => $this->t('&lt;&lt;'),
+          '#submit' => ['::previous_level_submit'],
+
+        ];
+        $form['next_chapter'] = [
+          '#type' => 'submit',
+          '#value' => $this->t('&gt;&gt;'),
+          '#submit' => ['::next_level_submit'],
+        ];
+
       }
 
       if ($levels == 2) {
 
-        // $chapter_tid = $sloka_selected = NULL;
-        // select the level labels like Chapter, Sloka etc
+        // Select the level labels like Chapter, Sloka etc.
         $level_labels = explode(',', $text_node->field_level_labels->value);
-        // $name = $level_labels[0];
-        // print_r($name);exit;
+
         $langcode = 'dv';
-        // $chapter_selected_tid = 5227; // Chapter 1
+
         $form['text_info']['fieldset'] = [
           '#type' => 'fieldset',
           '#title' => $this->t('Select the levels '),
@@ -190,7 +195,7 @@ class DisplayCheckBoxes extends FormBase {
 
         // Query for chapters.
         $chapters = [];
-        // $query = db_query("SELECT * FROM `taxonomy_term_field_data` WHERE name LIKE 'Chapter%' AND vid = :textname ORDER BY tid ASC", [':textname' => $textname])->fetchAll();
+
         $query = db_query("SELECT * FROM `taxonomy_term_field_data` WHERE name LIKE '{$level_labels[0]}%' AND vid = :textname ORDER BY tid ASC", [':textname' => $textname])->fetchAll();
 
         // Done to set the default value.
@@ -298,12 +303,37 @@ class DisplayCheckBoxes extends FormBase {
         //   'event' => 'change',
         // ],
         ];
-        // $form['actions'] = [
-        //   '#type' => 'submit',
-        //   '#value' => 'Submit ',
-        // ];
+
+        // Navigatin Buttons.
+        $form['previous_chapter'] = [
+          '#type' => 'submit',
+          '#value' => $this->t('&lt;&lt;'),
+          '#submit' => ['::previous_level_submit'],
+
+        ];
+
+        $form['previous_sloka'] = [
+          '#type' => 'submit',
+          '#value' => $this->t('&lt;'),
+          '#submit' => ['::previous_sublevel_submit'],
+
+        ];
+
+        $form['next_sloka'] = [
+          '#type' => 'submit',
+          '#value' => $this->t('&gt;'),
+          '#submit' => ['::next_sublevel_submit'],
+
+        ];
+
+        $form['next_chapter'] = [
+          '#type' => 'submit',
+          '#value' => $this->t('&gt;&gt;'),
+          '#submit' => ['::next_level_submit'],
+        ];
+
       }
-      // Form for ramayana. Putting ramayana_test for now.
+
       if ($levels == 3) {
         $langcode = 'dv';
         $level_labels = explode(',', $text_node->field_level_labels->value);
@@ -314,7 +344,7 @@ class DisplayCheckBoxes extends FormBase {
           '#description' => $this->t('Choose the content'),
         ];
 
-        // TODO: make query for Kandas.
+        // Make query for Kandas.
         $kandas = [];
         $query = db_query("SELECT * FROM `taxonomy_term_field_data` WHERE name LIKE '{$level_labels[0]}%' AND vid = :textname ORDER BY tid ASC", [':textname' => $textname])->fetchAll();
 
@@ -465,16 +495,41 @@ class DisplayCheckBoxes extends FormBase {
 
         // '#attributes' => ['onchange' => 'this.form.submit();'],
         //     '#ajax' => [
-        //   'callback' => ':: submitForm',
+        //   'callback' => '::  _ajax_callback_setValues',
         //   'event' => 'change',
         // ],
         ];
-        // $form['actions'] = [
-        //   '#type' => 'submit',
-        //   '#value' => 'Submit',
-        // ];
+
+        $form['previous_sarga'] = [
+          '#type' => 'submit',
+          '#value' => $this->t('&lt;&lt;'),
+          '#submit' => ['::previous_level_submit'],
+
+        ];
+
+        $form['previous_sloka'] = [
+          '#type' => 'submit',
+          '#value' => $this->t('&lt;'),
+          '#submit' => ['::previous_sublevel_submit'],
+
+        ];
+
+        $form['next_sloka'] = [
+          '#type' => 'submit',
+          '#value' => $this->t('&gt;'),
+          '#submit' => ['::next_sublevel_submit'],
+
+        ];
+
+        $form['next_sarga'] = [
+          '#type' => 'submit',
+          '#value' => $this->t('&gt;&gt;'),
+          '#submit' => ['::next_level_submit'],
+        ];
+
       }
     }
+
     $form['actions'] = [
       '#type' => 'submit',
       '#value' => 'Submit',
@@ -488,7 +543,7 @@ class DisplayCheckBoxes extends FormBase {
    *
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $response = new AjaxResponse();
+    // $response = new AjaxResponse();
     $get = $_GET;
     $textid = $form_state->getValue('text');
 
@@ -520,8 +575,6 @@ class DisplayCheckBoxes extends FormBase {
       $get['position'] = $position;
       $get['language'] = $language;
 
-      // $url = Url::fromRoute('heritage_ui.addpage', ['textid' => $textid]);
-      //  $url->setOption('query', $get);
     }
 
     // Collect the chapter.
@@ -547,12 +600,11 @@ class DisplayCheckBoxes extends FormBase {
           $language = $lang->getName();
         }
       }
-      // $form_state['rebuild'] = TRUE;
+
       // Attach position and language to url.
       $get['position'] = $position;
       $get['language'] = $language;
-      // $url = Url::fromRoute('heritage_ui.addpage', ['textid' => $textid]);
-      // $url->setOption('query', $get);
+
     }
 
     if ($levels == 3) {
@@ -582,55 +634,374 @@ class DisplayCheckBoxes extends FormBase {
       $get['position'] = $position;
       $get['language'] = $language;
 
-      // $url = Url::fromRoute('heritage_ui.addpage', ['textid' => $textid]);
-      // $url->setOption('query', $get);
     }
     $url = Url::fromRoute('heritage_ui.addpage', ['textid' => $textid]);
     $url->setOption('query', $get);
 
     return $form_state->setRedirectUrl($url);
-    // $response->addCommand(new RedirectCommand($url));
-    // return $response;
+
   }
 
-  // Public function _ajax_callback_setValues(array &$form, FormStateInterface $form_state) {
-  // $response = new AjaxResponse();
-  //     $get = $_GET;
-  //   $textid = $form_state->getValue('text');
-  // // Find the textname.
-  //   $textname = db_query("SELECT field_machine_name_value FROM `node__field_machine_name` WHERE entity_id = :textid", [':textid' => $textid])->fetchField();
-  // // Collect the chapter.
-  //   $chapter_tid = $form_state->getValue('chapters');
-  //   $sloka_number = $form_state->getValue('slokas');
-  // // Get the chapter number from table taxonomy_term__field_position and see column field_positon_value.
-  //   $chapter_number = db_query("SELECT field_position_value FROM  `taxonomy_term__field_position` WHERE entity_id = :entityid AND bundle = :textname", [':entityid' => $chapter_tid, ':textname' => $textname])->fetchField();
-  // $position = $chapter_number . '.' . $sloka_number;
-  // // Default language.
-  //   $language = 'devanagari';
-  //   $languages = \Drupal::service('language_manager')->getLanguages(LanguageInterface::STATE_CONFIGURABLE);
-  // // Collect the langcode.
-  //   $langcode = $form_state->getValue('selected_langcode');
-  //   // This loop is for printing the languages as English, Hindi, Bengali etc
-  //   // Else it gets printed as en,dv,bn.
-  //   foreach ($languages as $lang) {
-  //     if ($langcode == $lang->getId()) {
-  //       $language = $lang->getName();
-  //     }
-  //   }
-  // // Attach position and language to url.
-  //   $get['position'] = $position;
-  //   $get['language'] = $language;
-  // // $url = Url::fromRoute('heritage_ui.addpage', ['textid' => $textid]);
-  //   // $url->setOption('query', [
-  //   //   'position' => $position,
-  //   //   'language' => $language,
-  //   // ]);
-  //   //$url->setOption('query', $get);
-  // //  $url->setOption('query', ['test' => $test]);
-  // $url = '/text/' . $textid . '/page?position=' . $position . '&' . 'language=' . $language;
-  // $response->addCommand(new RedirectCommand($url));
-  //   return $response;
-  // }.
+  /**
+   * Custom submit handler for next level.
+   */
+  public function next_level_submit(array &$form, FormStateInterface $form_state) {
+    $get = $_GET;
+    $textid = $form_state->getValue('text');
+
+    $levels = $form_state->getValue('levels');
+    $text_node = Node::load($textid);
+    $machine_name = $text_node->field_machine_name->value;
+
+    if ($levels == 1) {
+      $get = $_GET;
+      $textid = $form_state->getValue('text');
+
+      if (isset($_GET['position'])) {
+        $position = $_GET['position'];
+        $chapter_selected = $position;
+
+        // Check that the increment does not go beyond the total numvber of chapters
+        // Find the number of top level terms.
+        $topLevelTerms = db_query("SELECT * FROM `taxonomy_term_field_data` WHERE tid IN (SELECT entity_id FROM `taxonomy_term__parent` WHERE bundle=:bundle AND parent_target_id = 0)", [':bundle' => $machine_name])->fetchAll();
+        $topLevelTermsCount = count($topLevelTerms);
+
+        // Increment the chapter.
+        $chapter_selected += 1;
+
+        // Check that the chapter does not exceed the topLevelCount.
+        if ($chapter_selected > $topLevelTermsCount) {
+          // Increment chapter number.
+          $chapter_selected = 1;
+
+        }
+
+        // New position parameter.
+        $position = $chapter_selected;
+        // Attach position to the url.
+        $get['position'] = $position;
+
+      }
+
+    }
+
+    if ($levels == 2) {
+      // $chapter_selected = 0;
+      if (isset($_GET['position'])) {
+        $position = $_GET['position'];
+
+        $var = explode('.', $position);
+        $chapter_selected = $var[0];
+        $sloka_selected = $var[1];
+
+        // Check that the increment does not go beyond the total numvber of chapters
+        // Find the number of top level terms.
+        $topLevelTerms = db_query("SELECT * FROM `taxonomy_term_field_data` WHERE tid IN (SELECT entity_id FROM `taxonomy_term__parent` WHERE bundle=:bundle AND parent_target_id = 0)", [':bundle' => $machine_name])->fetchAll();
+        $topLevelTermsCount = count($topLevelTerms);
+
+        // Increment the chapter.
+        $chapter_selected += 1;
+
+        // Check that the chapter does not exceed the topLevelCount.
+        if ($chapter_selected > $topLevelTermsCount) {
+          // Increment chapter number.
+          $chapter_selected = 1;
+
+        }
+
+        // New position parameter.
+        $position = $chapter_selected . '.' . $sloka_selected;
+
+        // Attach position to the url.
+        $get['position'] = $position;
+
+      }
+
+    }
+
+    if ($levels == 3) {
+
+      if (isset($_GET['position'])) {
+        $position = $_GET['position'];
+        $var = explode('.', $position);
+
+        $kanda_selected = $var[0];
+        $sarga = $var[1];
+        $sloka_selected = $var[2];
+
+        // Increment sarga.
+        $sarga += 1;
+
+        // Find the kanda tid.
+        $kanda_tid = db_query("SELECT entity_id FROM  `taxonomy_term__field_position` WHERE field_position_value = :kanda_selected AND bundle = :textname", [':kanda_selected' => $kanda_selected, ':textname' => $machine_name])->fetchField();
+
+        // Find the number of sarga for the given kanda.
+        $sarga_count = calculate_sublevels($machine_name, $kanda_tid);
+
+        if ($sarga > $sarga_count) {
+          $sarga = 1;
+        }
+
+        $position = $kanda_selected . '.' . $sarga . '.' . $sloka_selected;
+        $get['position'] = $position;
+
+      }
+
+    }
+
+    $url = Url::fromRoute('heritage_ui.addpage', ['textid' => $textid]);
+    $url->setOption('query', $get);
+
+    return $form_state->setRedirectUrl($url);
+
+  }
+
+  /**
+   * Custom submit handler for previous level.
+   */
+  public function previous_level_submit(array &$form, FormStateInterface $form_state) {
+    $get = $_GET;
+    $textid = $form_state->getValue('text');
+
+    $levels = $form_state->getValue('levels');
+    $text_node = Node::load($textid);
+    $machine_name = $text_node->field_machine_name->value;
+
+    if ($levels == 1) {
+      $get = $_GET;
+      $textid = $form_state->getValue('text');
+
+      if (isset($_GET['position'])) {
+        $position = $_GET['position'];
+        $chapter_selected = $position;
+
+        // Check that the increment does not go beyond the total numvber of chapters
+        // Find the number of top level terms.
+        $topLevelTerms = db_query("SELECT * FROM `taxonomy_term_field_data` WHERE tid IN (SELECT entity_id FROM `taxonomy_term__parent` WHERE bundle=:bundle AND parent_target_id = 0)", [':bundle' => $machine_name])->fetchAll();
+        $topLevelTermsCount = count($topLevelTerms);
+
+        // Increment the chapter.
+        $chapter_selected -= 1;
+
+        // Check that the chapter does not exceed the topLevelCount.
+        if ($chapter_selected < 1) {
+          // Increment chapter number.
+          $chapter_selected = 1;
+
+        }
+
+        // New position parameter.
+        $position = $chapter_selected;
+        // Attach position to the url.
+        $get['position'] = $position;
+
+      }
+
+    }
+
+    if ($levels == 2) {
+      // $chapter_selected = 0;
+      if (isset($_GET['position'])) {
+        $position = $_GET['position'];
+
+        $var = explode('.', $position);
+        $chapter_selected = $var[0];
+        $sloka_selected = $var[1];
+
+        // Check that the increment does not go beyond the total numvber of chapters
+        // Find the number of top level terms.
+        $topLevelTerms = db_query("SELECT * FROM `taxonomy_term_field_data` WHERE tid IN (SELECT entity_id FROM `taxonomy_term__parent` WHERE bundle=:bundle AND parent_target_id = 0)", [':bundle' => $machine_name])->fetchAll();
+        $topLevelTermsCount = count($topLevelTerms);
+        // Decrement the chapter.
+        $chapter_selected -= 1;
+
+        // Check that the chapter don't fall below 0.
+        if ($chapter_selected < 1) {
+          // Decrement chapter number.
+          $chapter_selected = 1;
+
+        }
+
+        // New position parameter.
+        $position = $chapter_selected . '.' . $sloka_selected;
+
+        // Attach position to the url.
+        $get['position'] = $position;
+
+      }
+
+    }
+
+    if ($levels == 3) {
+
+      if (isset($_GET['position'])) {
+        $position = $_GET['position'];
+        $var = explode('.', $position);
+
+        $kanda_selected = $var[0];
+        $sarga = $var[1];
+        $sloka_selected = $var[2];
+
+        // Decrement sarga.
+        $sarga -= 1;
+
+        if ($sarga < 1) {
+          $sarga = 1;
+        }
+
+        $position = $kanda_selected . '.' . $sarga . '.' . $sloka_selected;
+        $get['position'] = $position;
+
+      }
+
+    }
+
+    $url = Url::fromRoute('heritage_ui.addpage', ['textid' => $textid]);
+    $url->setOption('query', $get);
+
+    return $form_state->setRedirectUrl($url);
+  }
+
+  /**
+   * Custom submit handler for next sublevel.
+   */
+  public function next_sublevel_submit(array &$form, FormStateInterface $form_state) {
+    $get = $_GET;
+    $textid = $form_state->getValue('text');
+    // Find the textname.
+    $textname = db_query("SELECT field_machine_name_value FROM `node__field_machine_name` WHERE entity_id = :textid", [':textid' => $textid])->fetchField();
+    $levels = $form_state->getValue('levels');
+
+    if ($levels == 2) {
+
+      if (isset($_GET['position'])) {
+        $position = $_GET['position'];
+
+        $var = explode('.', $position);
+        $chapter_selected = $var[0];
+        $sloka_selected = $var[1];
+
+        // Check that the increment does not go beyond the total numvber of slokas
+        // Find the number of slokas for each chapter.
+        $chapter_tid = $form_state->getValue('chapters');
+        $sub_level_count = calculate_sublevel_number($textname, $chapter_tid);
+
+        // Increment the sloka.
+        $sloka_selected += 1;
+
+        // Check that the chapter does not exceed the topLevelCount.
+        if ($sloka_selected > $sub_level_count) {
+          $sloka_selected = 1;
+        }
+
+        // New position parameter.
+        $position = $chapter_selected . '.' . $sloka_selected;
+
+        // Attach position to the url.
+        $get['position'] = $position;
+
+      }
+    }
+
+    if ($levels == 3) {
+      if (isset($_GET['position'])) {
+        $position = $_GET['position'];
+        $var = explode('.', $position);
+        $kanda_selected = $var[0];
+        $sarga = $var[1];
+        $sloka_selected = $var[2];
+
+        // Increment slokas.
+        $sloka_selected += 1;
+        $sarga_selected = $kanda_selected . '.' . $var[1];
+
+        // Find the sarga tid.
+        $sarga_tid = db_query("SELECT entity_id FROM  `taxonomy_term__field_position` WHERE field_position_value = :sarga_selected AND bundle = :textname", [':sarga_selected' => $sarga_selected, ':textname' => $textname])->fetchField();
+
+        // Find the total number of sloka for a given sarga.
+        $sloka_count = calculate_sublevel_number($textname, $sarga_tid);
+
+        if ($sloka_selected > $sloka_count) {
+          $sloka_selected = 1;
+        }
+
+        $position = $kanda_selected . '.' . $sarga . '.' . $sloka_selected;
+        $get['position'] = $position;
+
+      }
+
+    }
+    $url = Url::fromRoute('heritage_ui.addpage', ['textid' => $textid]);
+    $url->setOption('query', $get);
+
+    return $form_state->setRedirectUrl($url);
+  }
+
+  /**
+   * Custom submit handler for previous sublevel.
+   */
+  public function previous_sublevel_submit(array &$form, FormStateInterface $form_state) {
+    $get = $_GET;
+    $textid = $form_state->getValue('text');
+    // Find the textname.
+    $textname = db_query("SELECT field_machine_name_value FROM `node__field_machine_name` WHERE entity_id = :textid", [':textid' => $textid])->fetchField();
+    $levels = $form_state->getValue('levels');
+
+    if ($levels == 2) {
+
+      if (isset($_GET['position'])) {
+        $position = $_GET['position'];
+
+        $var = explode('.', $position);
+        $chapter_selected = $var[0];
+        $sloka_selected = $var[1];
+
+        // Check that the increment does not go beyond the total numvber of slokas
+        // Find the number of slokas for each chapter.
+        $chapter_tid = $form_state->getValue('chapters');
+        $sub_level_count = calculate_sublevel_number($textname, $chapter_tid);
+
+        // Increment the sloka.
+        $sloka_selected -= 1;
+
+        // Check that the chapter does not exceed the topLevelCount.
+        if ($sloka_selected < 1) {
+          $sloka_selected = 1;
+        }
+
+        // New position parameter.
+        $position = $chapter_selected . '.' . $sloka_selected;
+
+        // Attach position to the url.
+        $get['position'] = $position;
+
+      }
+    }
+    if ($levels == 3) {
+      if (isset($_GET['position'])) {
+        $position = $_GET['position'];
+        $var = explode('.', $position);
+        $kanda_selected = $var[0];
+        $sarga = $var[1];
+        $sloka_selected = $var[2];
+
+        // Deccrement slokas.
+        $sloka_selected -= 1;
+
+        if ($sloka_selected < 1) {
+          $sloka_selected = 1;
+        }
+
+        $position = $kanda_selected . '.' . $sarga . '.' . $sloka_selected;
+        $get['position'] = $position;
+
+      }
+    }
+    $url = Url::fromRoute('heritage_ui.addpage', ['textid' => $textid]);
+    $url->setOption('query', $get);
+
+    return $form_state->setRedirectUrl($url);
+  }
 
   /**
    *

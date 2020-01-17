@@ -18,6 +18,7 @@ class HeritageTextPage extends ControllerBase {
     $build = [];
 
     $params['metadata'] = 0;
+    $play_option = [];
 
     if (isset($_GET['position']) && isset($_GET['language'])) {
 
@@ -42,17 +43,37 @@ class HeritageTextPage extends ControllerBase {
 
     }
 
+    // See the play options
+    if(isset($_GET['play'])) {
+      $list = $_GET['play'];
+      $options = explode(',',$list);
+
+      foreach ($options as $value) {
+        $play_option[$value] = 1;
+
+      }
+    }
+
     // print("<pre>");print_r($params);exit;
     if (isset($params[$field_name]) && isset($params['position']) && isset($params['language'])) {
       // print("<pre>");print_r($params);
       $response = my_module_reponse('http://172.27.13.38/api/' . $textid, 'GET', $params);
+    //    if(isset($_GET['audio'])) {
+    //   $response['audio'] = $_GET['audio'];
+    // }
 
     }
+   
 
-    // print("<pre>");print_r($response);exit;
+     //print("<pre>");print_r($response);exit;
     if ($response) {
       $result = json_decode($response, TRUE);
-      // print("<pre>");print_r($result);exit;
+       //print("<pre>");print_r($result);exit;
+      if(isset($play_option[$value])) {
+        $result['play'] = $play_option;
+      //  print("<pre>");print_r($result);exit;
+      }
+
       $data = [];
       // # add all the data in one multiple dim array
       $data['title'] = 'Check TWIG Template';

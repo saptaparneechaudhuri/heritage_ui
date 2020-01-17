@@ -3,7 +3,6 @@
 namespace Drupal\heritage_ui\Plugin\Block;
 
 use Drupal\Core\Block\BlockBase;
-use Drupal\Core\Url;
 use Drupal\Core\Path\CurrentPathStack;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
@@ -68,33 +67,26 @@ class DisplaySources extends BlockBase implements ContainerFactoryPluginInterfac
 
     $builtForm = \Drupal::formBuilder()->getForm('Drupal\heritage_ui\Form\SourcesMenu');
     $build = [];
-    // $sources = '';
-
+    // $sources = '';.
     // $path = $this->currPath->getPath();
     // $arg = explode('/', $path);
     // $textid = $arg[2];
     // // print_r($arg);exit;
     // // Fetch all the available sources.
     // $available_sources = db_query("SELECT * FROM `heritage_source_info` WHERE text_id = :textid ORDER BY language DESC", [':textid' => $textid])->fetchAll();
-
-    // if (count($available_sources) > 0) {
+    // If (count($available_sources) > 0) {
     //   for ($i = 0; $i < count($available_sources); $i++) {
     //     $url = Url::fromRoute('entity.node.canonical', ['node' => $available_sources[$i]->id]);
     //     $link = $this->pathLink->generate($available_sources[$i]->title, $url);
-    //     $sources = $sources . $link . '</br>';
-
-    //   }
-
+    //     $sources = $sources . $link . '</br>';.
     // }
-
-    //$render = $sources;
+    // }.
+    // $render = $sources;.
     $build['form'] = $builtForm;
-    //$build['#markup'] = render($render);
+    // $build['#markup'] = render($render);
     $build['#cache']['max-age'] = 0;
     return $build;
 
   }
-
-  
 
 }

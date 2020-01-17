@@ -1,25 +1,15 @@
-heritage_ui.addpage:
-  path: '/text/{textid}/page'
+heritage_ui.contentpage:
+  path: '/text/{textid}/content'
   defaults: 
-    _controller: '\Drupal\heritage_ui\Controller\HeritageTextPage::getList'
-    _title_callback: '\Drupal\heritage_ui\Controller\HeritageTextPage::getTitle'
-#    _title: 'Heritage Text Page'
-
+    _controller: '\Drupal\heritage_ui\Controller\HeritageTextContent::getContent'
+    _title_callback: '\Drupal\heritage_ui\Controller\HeritageTextContent::getTitle'
   requirements:
     _permission: 'access content'
-# heritage_ui.list:
-#   path: '/api/{sourceid}/status'
-#   defaults:
-#     _controller: '\Drupal\heritage_ui\Controller\HeritageTextPage::getList'
-#     _title: 'Get Content'
-#   requirements:
-#     _permission: 'access content' 
+heritage_ui.example:
+  path: '/example/form'
+  defaults:
+    _form: '\Drupal\heritage_ui\Form\ExampleForm'
+    _title: 'Example Form'
+  requirements:
+    _permission: 'access content'
 
-
-  # ev_client_endpoint:
-  # path: '/v1/custom_endpoint'
-  # methods:  [GET]
-  # defaults:
-  #   _controller: 'Drupal\ev_client_endpoint\Controller\EvEndpoint::get'
-  # requirements:
-  #   _permission: 'access content' 
