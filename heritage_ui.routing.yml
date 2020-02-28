@@ -5,11 +5,11 @@ heritage_ui.contentpage:
     _title_callback: '\Drupal\heritage_ui\Controller\HeritageTextContent::getTitle'
   requirements:
     _permission: 'access content'
-heritage_ui.example:
-  path: '/example/form'
+heritage_ui.sourcesmenu:
+  path: '/text/{textid}/sources'
   defaults:
-    _form: '\Drupal\heritage_ui\Form\ExampleForm'
-    _title: 'Example Form'
+    _form: '\Drupal\heritage_ui\Form\SourcesMenu'
+    _title: 'Sources Available'
   requirements:
     _permission: 'access content'
 

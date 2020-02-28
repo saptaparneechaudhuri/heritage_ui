@@ -1,0 +1,91 @@
+<div id="textcontent">
+  { This is div }
+   {% set field = data|slice(2) %}
+    {% for item in field %}
+           
+     <h1> {{ item.content|raw }} </h1>
+           {Metadata is displayed on click}
+           <div>{{ drupal_block('displaymetadata') }}</div>
+          {% if item.audio %}
+          {hello audio}
+           <audio controls src= "{{item.audio}}" id = "audio-play">
+            Your browser does not support the
+            <code>audio</code> element.
+            </audio>
+            {# <dt>Block:</dt>
+                        <dd>{{ drupal_block('audioplayoptions') }}</dd>
+                        <dd>{{ drupal_block('test') }}</dd> #}
+            <div>{{ drupal_block('displaymetadata') }}</div>
+
+
+            {% endif %}
+
+            {% if item.autoplay == 1 %}
+            {autoplay is present}
+           <script> 
+           var x = document.getElementById("audio-play"); 
+           x.autoplay = true;
+           x.load();
+
+           </script>
+           {% endif %}
+
+             {% if item.continuousplay %}
+           <script > var x = document.getElementById("audio-play"); 
+                     x.loop = true;
+                     x.load();
+           </script>
+
+             
+
+             {% endif %}
+
+{# {% if item.autoplay and item.continuousplay %}
+           <script> var x = document.getElementById("audio-play").autoplay; </script>
+             
+             {% endif %} #}
+      
+         
+      {% endfor %}
+
+    {# <audio
+               controls
+               src= "http://172.27.13.38/sites/default/files/gita/1-1.MP3">
+                   Your browser does not support the
+                   <code>audio</code> element.
+           </audio> #}
+   
+
+ 
+ </div> 
+
+
+
+ {% if page.highlighted %}
+
+  <div id="main">
+  <button class="openbtn" onclick="openNav()">☰ Open Sidebar</button>  
+
+  </div>
+
+
+ {% endif %}
+
+  <div id="metadatainfo">
+ {This is metadata div}
+   {% set field = data %}
+   {{field.title}}
+    {# {% for item in field %}
+        {{ item.title }}
+        {% endfor %}
+    #}
+ </div> 
+
+
+
+ 
+
+
+ 
+
+

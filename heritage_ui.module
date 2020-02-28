@@ -103,16 +103,16 @@ function heritage_ui_theme($existing, $type, $theme, $path) {
   return [
     'text_content' => [
       'variables' => [
+        'textid' => NULL,
         'data' => NULL,
-        // 'form' => [],
-        'audio_block' => NULL,
-        'metadata_block' => NULL,
+        'metadata_form' => NULL,
+        'allow_edit' => NULL,
       ],
     ],
   ];
-
- 
 }
+
+
 
 /**
  *

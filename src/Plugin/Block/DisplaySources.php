@@ -7,6 +7,8 @@ use Drupal\Core\Path\CurrentPathStack;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Utility\LinkGeneratorInterface;
+use Drupal\Component\Serialization\Json;
+use Drupal\Core\Url;
 
 /**
  * Provides a block to Display Sources of a Heritage Text, .
@@ -64,29 +66,40 @@ class DisplaySources extends BlockBase implements ContainerFactoryPluginInterfac
    * {@inheritdoc}
    */
   public function build() {
-
     $builtForm = \Drupal::formBuilder()->getForm('Drupal\heritage_ui\Form\SourcesMenu');
     $build = [];
-    // $sources = '';.
-    // $path = $this->currPath->getPath();
-    // $arg = explode('/', $path);
-    // $textid = $arg[2];
-    // // print_r($arg);exit;
-    // // Fetch all the available sources.
-    // $available_sources = db_query("SELECT * FROM `heritage_source_info` WHERE text_id = :textid ORDER BY language DESC", [':textid' => $textid])->fetchAll();
-    // If (count($available_sources) > 0) {
-    //   for ($i = 0; $i < count($available_sources); $i++) {
-    //     $url = Url::fromRoute('entity.node.canonical', ['node' => $available_sources[$i]->id]);
-    //     $link = $this->pathLink->generate($available_sources[$i]->title, $url);
-    //     $sources = $sources . $link . '</br>';.
-    // }
-    // }.
-    // $render = $sources;.
-    $build['form'] = $builtForm;
-    // $build['#markup'] = render($render);
-    $build['#cache']['max-age'] = 0;
-    return $build;
+    $path = $this->currPath->getPath();
+    $arg = explode('/', $path);
+    $textid = $arg[2];
+    $url = Url::fromRoute('heritage_ui.sourcesmenu', ['textid' => $textid]);
 
+    // This is to keep the check boxes ticked.
+    if (isset($_GET['source'])) {
+      $url->setOption('query',[
+           'source' => $_GET['source'],
+       ]);
+    }
+    $build['link'] = [
+      '#title' => 'Select Sources',
+      '#type' => 'link',
+      '#url' => $url,
+      '#attributes' => [
+        'class' => ['use-ajax'],
+        'data-dialog-type' => 'dialog',
+        'data-dialog-renderer' => 'off_canvas',
+        'data-dialog-options' => Json::encode(['width' => 400]),
+      ],
+      '#attached' => [
+        'library' => [
+          'core/drupal.dialog.ajax',
+        ],
+      ],
+    ];
+    $build['#cache']['max-age'] = 0;
+    /* return $build; 
+    $build['form'] = $builtForm;
+    $build['#cache']['max-age'] = 0; */
+    return $build;
   }
 
 }

@@ -145,26 +145,24 @@ class NavigationLevels extends FormBase {
             $ajaxCalledBy = $triggeredByArray[2];
             $navLevleChange = $triggeredByArray[0];
             $navLevelChangeDirection = $triggeredByArray[1];
-            $position_to_change = array_search(ucfirst($navLevleChange), $level_labels_array);
-            $currentValue = $form_state->getValue(strtolower(end($level_labels_array)));
+            $currentValue = $form_state->getValue($navLevleChange);
             $position = db_query("SELECT field_position_value FROM `taxonomy_term__field_position` WHERE entity_id = :tid", [':tid' =>$currentValue])->fetchField();
             \Drupal::logger('current_value')->notice('Current Value: ' . $currentValue . ', Position: ' . $position);
             if ($navLevelChangeDirection == 'next') {
               // $default_value = $currentValue + 1;
-              $newposition = $this->_get_next_level($textname, $position, 0, $position_to_change);
-              $newposition_original = $newposition;
+              $newposition = $this->_get_next_level($textname, $position, 0);
               $newposition_tid = $newposition; 
-              \Drupal::logger('new_postion_after_calc')->notice('New Position: ' . $newposition);
-              for($l = $levels - 1; $l >= 0; $l--) {
+              for($l = $levels -1; $l >= 0; $l--) {
                 $newParents[$l] = db_query("SELECT parent_target_id FROM `taxonomy_term__parent` WHERE entity_id = :tid", [':tid' =>$newposition_tid])->fetchField();
                 $newposition_tid = $newParents[$l];
               }
+              // $newParents = db_query("SELECT parent_target_id FROM `taxonomy_term__parent` WHERE entity_id = :tid", [':tid' =>$newposition])->fetchField();
             }
             if ($navLevelChangeDirection == 'prev') {
-              $newposition = $this->_get_prev_level($textname, $position, 0, $position_to_change);
-              $newposition_original = $newposition;
+              // $default_value = $currentValue + 1;
+              $newposition = $this->_get_prev_level($textname, $position, 0);
               $newposition_tid = $newposition; 
-              for($l = $levels - 1; $l >= 0; $l--) {
+              for($l = $levels -1; $l >= 0; $l--) {
                 $newParents[$l] = db_query("SELECT parent_target_id FROM `taxonomy_term__parent` WHERE entity_id = :tid", [':tid' =>$newposition_tid])->fetchField();
                 $newposition_tid = $newParents[$l];
               }
@@ -252,12 +250,26 @@ class NavigationLevels extends FormBase {
             $units = $this->get_sub_levels($id, $textname);
             $first_element = key($units);
             if (isset($ajaxCalledBy) && $ajaxCalledBy == 'navigation') {
-              $units = $this->get_sub_levels($newParents[$j], $textname);
-              if ($j != ($levels -1)) {
-                $default_value = $newParents[$j+1];
+              if ($navLevleChange == $levelName) {
+                if ($j != 0 && $newParents[$j-1] != 0) {
+                  $units = $this->get_sub_levels($newParents[$j], $textname);
+                }
+                $default_value = $newposition;  
               }
               else {
-                $default_value = $newposition_original;
+                if ($j != ($levels -1)) {
+                  // $default_value = $form_state->getValue(strtolower($level_labels_array[$j]));
+                  if ($j != 0) {
+                    $units = $this->get_sub_levels($newParents[$j], $textname);
+                  }
+                  else {
+                    $units = $this->get_sub_levels(0, $textname);
+                  }
+                  $default_value = $newParents[$j+1];
+                }
+                else {
+                  $default_value = $first_element;
+                }
               }
             }
             else if (count($levelToChange) == 0) {
@@ -422,8 +434,16 @@ class NavigationLevels extends FormBase {
         if (strtolower($key) == strtolower($level_labels_array[$i])) {
          \Drupal::logger('in_submit')->notice('Key is: ' . $key . ' Value is: ' . $value);
           if (isset($triggeredByArray[1]) && isset($triggeredByArray[2]) && $triggeredByArray[2] == 'navigation') {
-            $newValue[] = $value;
-            $levelToChange[] = '#edit-' . $key;
+            // if (strtolower($key) == $triggeredByArray[0]) {
+              // if ($triggeredByArray[1] == 'next') {
+                $newValue[] = $value;
+                $levelToChange[] = '#edit-' . $key;
+              // }
+             /*  else {
+                $newValue[]  = $value;
+                $levelToChange[] = '#edit-' . $triggeredByArray[0];
+              } */
+            // }
           }
           $position_value = db_query("SELECT field_position_value FROM  `taxonomy_term__field_position` WHERE entity_id = :entityid AND bundle = :textname", [':entityid' => $value, ':textname' => $textname])->fetchField();
           $position_array[] = $position_value;
@@ -441,49 +461,20 @@ class NavigationLevels extends FormBase {
       foreach ($fields as $field_name) {
         $params[$field_name] = 1;
       }
-     
     }
     else {
       $moolshloka_source_id = db_query("SELECT id FROM `heritage_source_info` WHERE text_id = :textid AND type = 'moolam' AND format = 'text'", [':textid' => $textid])->fetchField();
       $field_name = 'field_' . $textname . '_' . $moolshloka_source_id . '_text';
       $params[$field_name] = 1;
-    
-
-
-
-
-
     }
     \Drupal::logger('in_submit')->notice('Position is: ' . $params['position']);
     if (isset($params[$field_name]) && isset($params['position']) && isset($params['language'])) {
       $result = my_module_reponse('http://' . $_SERVER['HTTP_HOST'] . '/api/' . $textid, 'GET', $params);
     } 
     $result_json = json_decode($result, TRUE);
-    if (isset($_GET['play'])) {
-      $list = $_GET['play'];
-      $options = explode(',', $list);
-      foreach ($options as $value) {
-        $play_option[$value] = 1;
-      }
-    }
-    if (isset($play_option)) {
-      $result_json['play'] = $play_option;
-    }
-    $result_json['lastlevel'] = strtolower(end($level_labels_array));
-    $metadata_form = \Drupal::formBuilder()->getForm('Drupal\heritage_ui\Form\Metadata');
-    $current_user = \Drupal::currentUser();
-    if (in_array('editor', $current_user->getRoles()) || in_array('administrator', $current_user->getRoles())) {
-      $allow_edit = 1;
-    }
-    else {
-      $allow_edit = 0;
-    }
     $build = [
       '#theme' => 'text_content',
       '#data'=> $result_json,
-      '#textid' => $textid,
-      '#metadata_form' => $metadata_form,
-      '#allow_edit' => $allow_edit,
     ];
     // $form_state->setRebuild();
     $response = new AjaxResponse();
@@ -508,139 +499,151 @@ class NavigationLevels extends FormBase {
   /**
    *
    */
-  public function _get_prev_level($textname, $position, $recursive, $position_to_change) {
-    $newTid = 0;
+  public function _get_prev_level($textname, $position, $recursive) {
+    $newposition = '';
+    $nextTid = 0;
     $position_array = explode(".", $position);
     $levels = count($position_array);
-    if ($recursive == 1) {
-      $newposition = $position;
-    }
-    else {
-      $position_array[$position_to_change] = $position_array[$position_to_change] - 1;
-      /* if ($position_to_change != ($levels-1)) {
-        for ($i = $position_to_change+1; $i < $levels; $i++) {
-          $position_array[$i] = 1;
-        }
-      } */
-      $newposition = $this->_get_exact_position($position_array);
-    }
-    \Drupal::logger('get_prev_level')->notice('Next Position is: ' . $newposition);
-    $newTid = db_query(
-      "SELECT entity_id FROM `taxonomy_term__field_position` WHERE field_position_value = :newposition AND bundle = :bundle",
-      [
-        ':newposition' => $newposition,
-        ':bundle' => $textname,
-      ]
-    )->fetchField();
-    if ($newTid != null && $newTid > 0) {
-      \Drupal::logger('get_prev_level')->notice('Next tid is: ' . $newTid . ', Next Position is: ' . $newposition);
-      return $newTid;
-    }
-    else {
-      if ($position_to_change != 0) {
-         $position = $this->_get_last_level($textname, $position, $position_to_change);
+    $currentTid = db_query("SELECT entity_id FROM `taxonomy_term__field_position` WHERE bundle = :bundle AND field_position_value = :position", [':bundle' => $textname, ':position' => $position])->fetchField();
+    for($i = $levels-1; $i >= 0; $i--) {
+      if ($recursive == 1 && $currentTid != null) {
+        return $currentTid;
+        break;
+      }
+      else if ($currentTid != null) {
+          $currentParent = db_query("SELECT parent_target_id FROM `taxonomy_term__parent` WHERE entity_id = :tid", [':tid' => $currentTid])->fetchField(); 
+          $nextPosition = $position_array[$i] - 1;
+          $nextTid = db_query("SELECT entity_id FROM `taxonomy_term__field_index` WHERE bundle = :bundle AND field_index_value = :nextPosition AND entity_id IN (SELECT entity_id FROM `taxonomy_term__parent` WHERE parent_target_id = :parent)", 
+          [
+            ':bundle' => $textname,
+            ':nextPosition' => $nextPosition,
+            ':parent' => $currentParent,
+          ])->fetchField(); 
+          if ($nextTid > 0 ) {
+            $position_array[$i] = $nextPosition;
+            return $nextTid;
+            break;
+          }
+          else {
+            $position_array[$i] = 1;
+            if ($i != 0) {
+              $position_array[$i-1] = $position_array[$i-1] - 1;
+            }
+            for ($j = 0; $j < count($position_array); $j++) {
+              if ($j != (count($position_array) - 1)) {
+                $newposition = $newposition . $position_array[$j] . '.';
+              }
+              else {
+                $newposition = $newposition . $position_array[$j];
+              }
+            }
+            $nextTid = $this->_get_prev_level($textname, $newposition, 1);
+            if (isset($nextTid) && $nextTid > 0 && $nextTid != null){
+              return $nextTid;
+              break;
+            }
+          }
       }
       else {
-        // $position_array[$position_to_change] = $this->_get_last_level($textname, $position, $position_to_change);
-        // $position = $this->_get_exact_position($position_array);
-        $position = $this->_get_last_level($textname, $position, $position_to_change);
-        \Drupal::logger('recursive_position_get_prev_level')->notice('Position in recursive is: ' . $position);
+        $position_array[$i] = 1;
+        if ($i != 0) {
+          $position_array[$i-1] = 1;
+        }
+        for ($j = 0; $j < count($position_array); $j++) {
+          if ($j != (count($position_array) - 1)) {
+            $newposition = $newposition . $position_array[$j] . '.';
+          }
+          else {
+            $newposition = $newposition . $position_array[$j];
+          }
+        }
+        $nextTid = $this->_get_prev_level($textname, $newposition, 1);
+        if ($nextTid != null){
+          return $nextTid;
+          break;
+        }
       }
-      return $this->_get_prev_level($textname, $position, 1, $position_to_change);
     }
   }
 
   /**
    *
    */
-  public function _get_next_level($textname, $position, $recursive, $position_to_change) {
-    $newTid = 0;
+  public function _get_next_level($textname, $position, $recursive) {
+    $newposition = '';
+    $nextTid = 0;
     $position_array = explode(".", $position);
     $levels = count($position_array);
-    $position_array[$position_to_change] = $position_array[$position_to_change] + 1;
-    if ($position_to_change != ($levels-1)) {
-      for ($i = $position_to_change+1; $i < $levels; $i++) {
-        $position_array[$i] = 1;
+    $currentTid = db_query("SELECT entity_id FROM `taxonomy_term__field_position` WHERE bundle = :bundle AND field_position_value = :position", [':bundle' => $textname, ':position' => $position])->fetchField();
+    for($i = $levels-1; $i >= 0; $i--) {
+      if ($recursive == 1 && $currentTid != null) {
+        \Drupal::logger('current_position_array')->notice('Inside recursive Current tid for position ' . $position . ' is: ' . $currentTid . ' and recursive is ' . $recursive);
+        return $currentTid;
+        break;
       }
-    }
-    $newposition = $this->_get_exact_position($position_array);
-    // \Drupal::logger('get_next_level')->notice('Next Position is: ' . $newposition);
-    $newTid = db_query(
-      "SELECT entity_id FROM `taxonomy_term__field_position` WHERE field_position_value = :newposition AND bundle = :bundle",
-      [
-        ':newposition' => $newposition,
-        ':bundle' => $textname,
-      ]
-    )->fetchField();
-    if ($newTid != null && $newTid > 0) {
-      // \Drupal::logger('get_next_level')->notice('Next tid is: ' . $newTid . ', Next Position is: ' . $newposition);
-      return $newTid;
-    }
-    else {
-      if ($position_to_change != 0) {
-        $position_to_change = $position_to_change - 1;
-      }
-      else {
-        $position_array[$position_to_change] = 0;
-        $position = $this->_get_exact_position($position_array);
-        // \Drupal::logger('recursive_position')->notice('Position in recursive is: ' . $position);
-      }
-      return $this->_get_next_level($textname, $position, 1, $position_to_change);
-    }
-  }
-
-  public function _get_exact_position($position_array) {
-    $newposition = '';
-    for ($j = 0; $j < count($position_array); $j++) {
-      if ($j != (count($position_array) - 1)) {
-        $newposition = $newposition . $position_array[$j] . '.';
-      }
-      else {
-        $newposition = $newposition . $position_array[$j];
-      }
-    }
-    return trim($newposition);
-  }
-
-  public function _get_last_level($textname, $position, $position_to_change) {
-    $position_array = explode(".", $position);
-    \Drupal::logger('_get_last_level')->notice('Position _get_last_level: ' . $position);
-    \Drupal::logger('_get_last_level')->notice('Position to change: ' . $position_to_change);
-    if ($position_to_change == 0) {
-      $newposition = db_query("SELECT field_position_value FROM `taxonomy_term__field_position` WHERE bundle = :textname ORDER BY entity_id DESC LIMIT 1", [':textname' => $textname])->fetchField();
-      if ($newposition == $position) {
-        $newposition = db_query("SELECT field_position_value FROM `taxonomy_term__field_position` WHERE bundle = :textname ORDER BY entity_id ASC LIMIT 1", [':textname' => $textname])->fetchField();
-      }
-    }
-    else {
-      $position_array[$position_to_change - 1] = $position_array[$position_to_change - 1] - 1;
-      \Drupal::logger('_get_last_level_new_position')->notice('<pre><code>' . print_r($position_array[$position_to_change - 1], TRUE) . '</code></pre>');
-      \Drupal::logger('_get_last_level_new_position')->notice('<pre><code>' . print_r($position_array, TRUE) . '</code></pre>');
-      if ($position_array[$position_to_change - 1] != 0 ) {
-        $parentPositionArray = $position_array;
-        array_pop($parentPositionArray);
-        \Drupal::logger('_get_last_level_parent_position_array')->notice('<pre><code>' . print_r($parentPositionArray, TRUE) . '</code></pre>');
-        $parentPosition = $this->_get_exact_position($parentPositionArray);
-        \Drupal::logger('_get_last_level_parent_position')->notice('Parent Position is: ' . $parentPosition);
-        $prevPositionParentTid = db_query(
-          "SELECT entity_id FROM `taxonomy_term__field_position` WHERE field_position_value = :position AND bundle = :bundle",
+      else if ($currentTid != null) {
+          \Drupal::logger('get_next_level')->notice('Value of i is: ' . $i);
+          \Drupal::logger('get_next_level')->notice('Position: ' . $position);
+          $currentParent = db_query("SELECT parent_target_id FROM `taxonomy_term__parent` WHERE entity_id = :tid", [':tid' => $currentTid])->fetchField(); 
+          $nextPosition = $position_array[$i] + 1;
+          $nextTid = db_query("SELECT entity_id FROM `taxonomy_term__field_index` WHERE bundle = :bundle AND field_index_value = :nextPosition AND entity_id IN (SELECT entity_id FROM `taxonomy_term__parent` WHERE parent_target_id = :parent)", 
           [
-            ':position' => $parentPosition,
             ':bundle' => $textname,
-          ]
-        )->fetchField();
-        \Drupal::logger('_get_last_level_new_position')->notice('Position Prent Tid: ' . $prevPositionParentTid . ', Position parent id:' . $position[$position_to_change-1]);
-        $newposition = db_query("SELECT field_position_value p FROM `taxonomy_term__field_position` WHERE entity_id IN (SELECT entity_id FROM `taxonomy_term__parent` WHERE parent_target_id = :parent) ORDER BY entity_id DESC LIMIT 1", [':parent' => $prevPositionParentTid])->fetchField();
+            ':nextPosition' => $nextPosition,
+            ':parent' => $currentParent,
+          ])->fetchField(); 
+          if ($nextTid > 0 ) {
+            $position_array[$i] = $nextPosition;
+            \Drupal::logger('get_next_level_updated')->notice('<pre><code>' . print_r($position_array, TRUE) . '</code></pre>');
+            \Drupal::logger('get_next_level')->notice('Next tid is: ' . $nextTid);
+            return $nextTid;
+            break;
+          }
+          else {
+            $position_array[$i] = 1;
+            if ($i != 0) {
+              $position_array[$i-1] = $position_array[$i-1] + 1;
+            }
+            for ($j = 0; $j < count($position_array); $j++) {
+              if ($j != (count($position_array) - 1)) {
+                $newposition = $newposition . $position_array[$j] . '.';
+              }
+              else {
+                $newposition = $newposition . $position_array[$j];
+              }
+            }
+            \Drupal::logger('get_next_level')->notice('New Position: ' . $newposition);
+            $nextTid = $this->_get_next_level($textname, $newposition, 1);
+            if (isset($nextTid) && $nextTid > 0 && $nextTid != null){
+              return $nextTid;
+              break;
+            }
+          }
       }
       else {
-        \Drupal::logger('_get_last_level_going_recursive')->notice('<pre><code>' . print_r($position, TRUE) . '</code></pre>');
-        $position_to_change = $position_to_change - 1;
-        return $this->_get_last_level($textname, $position, $position_to_change);
+        \Drupal::logger('get_next_level')->notice('Value of i in else is: ' . $i);
+        $position_array[$i] = 1;
+        if ($i != 0) {
+          $position_array[$i-1] =  1;
+        }
+        for ($j = 0; $j < count($position_array); $j++) {
+          if ($j != (count($position_array) - 1)) {
+            $newposition = $newposition . $position_array[$j] . '.';
+          }
+          else {
+            $newposition = $newposition . $position_array[$j];
+          }
+        }
+        \Drupal::logger('new_position_value_to_check')->notice('New Position in no current id: ' . $newposition);
+        $nextTid = $this->_get_next_level($textname, $newposition, 1);
+        if ($nextTid != null){
+          return $nextTid;
+          break;
+        }
       }
     }
-    \Drupal::logger('_get_last_level_new_position')->notice('Position _get_last_level: ' . $newposition);
-    return $newposition;
   }
+
   /**
    *
    */

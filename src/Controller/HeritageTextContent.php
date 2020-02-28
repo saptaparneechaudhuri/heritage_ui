@@ -62,8 +62,13 @@ class HeritageTextContent extends ControllerBase {
    *
    */
   public function getContent($textid = NULL) {
-    $form = \Drupal::formBuilder()->getForm('Drupal\heritage_ui\Form\NavigationLevels');
-    // $form2 = \Drupal::formBuilder()->getForm('Drupal\heritage_ui\Form\Metadata');
+    $current_user = \Drupal::currentUser();
+    if (in_array('editor', $current_user->getRoles()) || in_array('administrator', $current_user->getRoles())) {
+      $allow_edit = 1;
+    }
+    else {
+      $allow_edit = 0;
+    }
     $path = $this->currPath->getPath();
     $arg = explode('/', $path);
 
@@ -74,11 +79,16 @@ class HeritageTextContent extends ControllerBase {
     $level_labels = explode(',', $node->field_level_labels->value);
     $numLevels = count($level_labels);
 
+   
+
+    
+
     global $_SERVER;
     $result = [];
     $response = NULL;
     $build = [];
     $params['metadata'] = 0;
+   // $params['mool_shloka'] = 0;
 
     $play_option = [];
     if (isset($_GET['source'])) {
@@ -87,13 +97,6 @@ class HeritageTextContent extends ControllerBase {
       foreach ($fields as $field_name) {
         $params[$field_name] = 1;
       }
-
-      // $sources = [];
-      // foreach($fields as $v){
-      //   $var2 = explode('_', $v);
-      //   $sources[] = $var2[2];
-      // }
-      // print("<pre>");print_r($sources);exit;
     }
     // See the play options.
     if (isset($_GET['play'])) {
@@ -108,11 +111,7 @@ class HeritageTextContent extends ControllerBase {
     }
     else {
       $get = 'No GET Parameter';
-    }
-
-    // $params['position'] = '1';
-    // Get the textid from the path and set the default position value accordingly
-   
+    }   
     for ($j = 0; $j < $numLevels; $j++) {
       if ($j == 0) {
         $position = '1';
@@ -129,6 +128,7 @@ class HeritageTextContent extends ControllerBase {
 
     }
     // print_r($params['position']);exit;.
+
     $response = my_module_reponse('http://' . $_SERVER['HTTP_HOST'] . '/api/' . $textid, 'GET', $params);
     if ($response) {
       $result = json_decode($response, TRUE);
@@ -139,47 +139,15 @@ class HeritageTextContent extends ControllerBase {
 
       // print("<pre>");print_r($result);exit;
     }
-
-    // If (isset($_GET['metadata'])) {
-    //   $metadata = $_GET['metadata'];
-    //   $build = [];
-    //   $param['metadata'] = $metadata;
-    //   $sourceid = 10589;.
-    // $response =  my_module_reponse('http://' . $_SERVER['HTTP_HOST'] . '/api/source/' . $sourceid . '/status', 'GET', $param);
-    // if ($response) {
-    //      $result['metainfo'] = json_decode($response, TRUE);
-    //       //print("<pre>");print_r($result);exit;
-    // } // if response
-    // } // if metadata
-    // If you want to display block created from UI.
-    $bid = 4;
-    $block_content = BlockContent::load($bid);
-    // $block_content =  \Drupal::entityManager()->getStorage('block')->load($bid);
-    $rendered_block = \Drupal::entityTypeManager()
-      ->getViewBuilder('block_content')
-      ->view($block_content);
-
-    // If you want to display plugin block.
-    $block_manager = \Drupal::service('plugin.manager.block');
-    $config = [];
-    $plugin_block = $block_manager->createInstance('heritage_audio_play', $config);
-    $render_audio = $plugin_block->build();
-
-    $plugin_block2 = $block_manager->createInstance('heritage_metadata', $config);
-    $render_metadata = $plugin_block2->build();
-
+    $metadata_form = \Drupal::formBuilder()->getForm('Drupal\heritage_ui\Form\Metadata');
+    $result['lastlevel'] = strtolower(end($level_labels));
     $build = [
-
       '#theme' => 'text_content',
-      // '#theme' => 'test_content',
       '#data' => $result,
-      // 'element-content' => $block_content,
-    // '#context' => ['form' => $form2],
-      '#audio_block' => $render_audio,
-      '#metadata_block' => $render_metadata,
-
+      '#textid' => $textid,
+      '#metadata_form' => $metadata_form,
+      '#allow_edit' => $allow_edit,
     ];
-
     return $build;
   }
 
@@ -190,94 +158,6 @@ class HeritageTextContent extends ControllerBase {
     // Load the text name.
     $title = db_query("SELECT title FROM `node_field_data` WHERE nid = :textid AND type = :type", [':textid' => $textid, ':type' => 'heritage_text'])->fetchField();
     return $title;
-  }
-
-  /**
-   * Ajax handler that insert the metadata into the div.
-   * put static in front because this function is called statically in the form
-   */
-  public static function metadataDisplay(array $form, FormStateInterface $form_state) {
-
-    // $selectedKey = $form_state->getValue('my_select');
-    // $selectedValue = $form['my_select']['#options'][$selectedKey];
-    $response_data = NULL;
-    $result = [];
-    $var = '';
-    $params['metadata'] = $form_state->getValue('metadata');
-    global $_SERVER;
-
-    // Default mool shloka id. Hardcoded now, will be coded later.
-    $sourceid = 10589;
-
-    if (isset($_GET['source'])) {
-      $list = $_GET['source'];
-      $var = explode(',', $list);
-
-      $sources = [];
-
-      foreach ($var as $v) {
-        $var2 = explode('_', $v);
-        $sources[] = $var2[2];
-      }
-
-      // Call the rest response for metadata for each source.
-      foreach ($sources as $sourceid) {
-        // $var = '';
-        $response_data = my_module_reponse('http://' . $_SERVER['HTTP_HOST'] . '/api/source/' . $sourceid . '/status', 'GET', $params);
-
-        if ($response_data) {
-          $result = json_decode($response_data, TRUE);
-          // print("<pre>");print_r($result);exit;
-          foreach ($result as $key => $value) {
-
-            if ($key == 'metadata') {
-
-              foreach ($value as $k => $v) {
-
-                $var = $var . ' ' . $k . ':' . $v . '</br>';
-
-              }
-
-            }
-
-          }
-
-        }
-
-      }
-
-    }
-
-    else {
-
-      $response_data = my_module_reponse('http://' . $_SERVER['HTTP_HOST'] . '/api/source/' . $sourceid . '/status', 'GET', $params);
-
-      if ($response_data) {
-        $result = json_decode($response_data, TRUE);
-        // print("<pre>");print_r($result);exit;
-        foreach ($result as $key => $value) {
-
-          if ($key == 'metadata') {
-            // $var = $var . ' ' . $key;
-            foreach ($value as $k => $v) {
-              $var = $var . ' ' . $k . ':' . $v . '</br>';
-
-            }
-
-          }
-
-        }
-      }
-
-    }
-
-    $response = new AjaxResponse();
-    // $selector = '#heritage-ui-metadata';
-    $selector = '#metadata-area';
-
-    $data = '<h2>Metadata</h2>' . ' ' . $var;
-    $response->addCommand(new HtmlCommand($selector, $data));
-    return $response;
   }
 
 }

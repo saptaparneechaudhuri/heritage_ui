@@ -1,109 +1,44 @@
+{{ attach_library('heritage_ui/heritage_ui_library') }}
 <div id="textcontent">
-  { This is div }
-   {% set field = data|slice(2) %}
-    {% for item in field %}
-          {% if item.content %}
-            <h1> {{ item.content|raw }} </h1>
-            <div id="metadata-area"></div>
-           {Metadata is displayed on click}
-          {# <div>{{ drupal_block('displaymetadata') }}</div> #} 
-           
-           <div>{{ metadata_block }}</div>
-
-          
-
-
-          {% endif %}
-    
-          {% if item.audio %}
-          {hello audio}
-           <audio controls src= "{{item.audio}}" id = "audio-play">
-            Your browser does not support the
-            <code>audio</code> element.
-            </audio>
-            {# <dt>Block:</dt>
-                        <dd>{{ drupal_block('audioplayoptions') }}</dd>
-                        <dd>{{ drupal_block('test') }}</dd> #}
-
-            
-            <div>{{ audio_block }}</div>
-
-
-            {% endif %}
-
-            {% if item.autoplay == 1 %}
-            {autoplay is present}
-           <script> 
-           var x = document.getElementById("audio-play"); 
-           x.autoplay = true;
-           x.load();
-
-           </script>
-           {% endif %}
-
-             {% if item.continuousplay %}
-           <script > var x = document.getElementById("audio-play"); 
-                     x.loop = true;
-                     x.load();
-           </script>
-
-             
-
-             {% endif %}
-
-            {# {% if item.autoplay and item.continuousplay %}
-                   <script> var x = document.getElementById("audio-play").autoplay; </script>
-             
-            {% endif %} #}
-
-            {# {% if item.metadata %}
-                                    <h2>HelloMetadata</h2> </br>
-                                   
-                                    {% set info = item.metadata %}
-                                     
-                                     
-                                            {% for k,v in info %}
-                                                {{ k }} : {{ v }} </br>
-                                             {% endfor %}
-                      
-                                     
-                                   
-                      
-                                  {% endif %} #}
-      
-         
-      {% endfor %}
-
-   
-   
-
- 
- </div> 
-
-
-
-
-{#  <div id="metadatainfo">
-
-   {% set field = data %}
-
-    {% if field.metadata %}
-      <h2> Metadata </h2> </br>
-      {% set item = field.metadata %}
-      {% for k,v in item %}
-        {{ k }} : {{ v }} </br>
-      {% endfor %}
-    
-      
+  {% set field = data|slice(2) %}
+  {% for item in field %}
+    {% if item.uniqueid > 0 %}
+      <p> {{ item.content|raw }} </p>
+      <div> {{ drupal_form('Drupal\\heritage_ui\\Form\\Metadata', item.uniqueid|raw) }} </div> 
+      {% if allow_edit == 1 %}
+        <p>
+          <a class="edit-text" href="{{ path('heritage_text_manager.editsource', {'sourceid': item.uniqueid}, {'query': {'destination': path('heritage_ui.contentpage', {'textid': textid})}}) }}">{{ 'Edit'|t }}</a>
+        <p>
+      {% endif %}
     {% endif %}
-    
- </div> #}
+    {% if item.audio %}
+       {% if data.play.autoplay == 1 %}
+        <audio autoplay controls src= "{{item.audio}}" id = "audio-play">
+          Your browser does not support the
+          <code>audio</code> element.
+        </audio>
+      {% elseif data.play.continuousplay == 1 %}
+        <audio autoplay controls src= "{{item.audio}}" id = "audio-play" onended="continousPlay('{{data.lastlevel}}')">
+          Your browser does not support the
+          <code>audio</code> element.
+        </audio>
+      {% else %}
+        <audio controls src= "{{item.audio}}" id = "audio-play">
+          Your browser does not support the
+          <code>audio</code> element.
+        </audio>
+      {% endif %}
+    {% endif %}
+
+  {% endfor %}
+
+</div>
 
 
 
- 
 
 
- 
+
+
 
 

@@ -89,12 +89,9 @@ class AudioPlay extends FormBase {
     ];
 
     $form['audio_options'] = [
-      '#title' => $this->t('Play Options'),
       '#type' => 'checkboxes',
       '#options' => $audio,
-     // '#default_value' => isset($play_option[$key]) ? $play_option : NULL,
       '#default_value' => isset($play_option) ? $play_option : NULL,
-
       '#attributes' => ['onchange' => 'this.form.submit();'],
     ];
 

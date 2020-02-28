@@ -2,6 +2,8 @@ heritage_ui_library:
   version: 1.x
   js:
     js/navigation.js: {}
+    js/continuousplay.js: {}
+    js/audioplay.js: {}
   dependencies:
     - core/jquery
     - core/drupal

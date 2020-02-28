@@ -10,6 +10,8 @@ use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\Core\Url;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\RedirectCommand;
+use Drupal\Core\Ajax\OpenModalDialogCommand;
+use Drupal\Core\Ajax\CloseModalDialogCommand;
 
 /**
  *
@@ -30,6 +32,7 @@ class Metadata extends FormBase {
    */
 
   protected $pathLink;
+  protected static $instanceId;
 
   /**
    * Class constructor.
@@ -56,24 +59,33 @@ class Metadata extends FormBase {
    *
    */
   public function getFormId() {
-    return 'heritage_ui_metadata';
+    if (empty(self::$instanceId)) {
+      self::$instanceId = 1;
+    }
+    else {
+      self::$instanceId++;
+    }
+    return 'heritage_ui_metadata' . self::$instanceId;
   }
 
   /**
    *
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $textid = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, $sourceid = NULL) {
 
     $path = $this->currPath->getPath();
     $arg = explode('/', $path);
     $textid = $arg[2];
-
     $metadata = 1;
 
     $form['text'] = [
       '#type' => 'hidden',
       '#value' => $textid,
+    ];
 
+    $form['sourceid'] = [
+      '#type' => 'hidden',
+      '#value' => $sourceid,
     ];
 
     $form['metadata'] = [
@@ -82,20 +94,17 @@ class Metadata extends FormBase {
     ];
 
     $form['display'] = [
-      //'#title' => $this->t('More'),
       '#type' => 'button',
       '#value' => $this->t('More'),
-       '#ajax' => [
-        'callback' => 'Drupal\heritage_ui\Controller\HeritageTextContent::metadataDisplay',
-        'effect' => 'slide',
+      '#ajax' => [
+        'callback' =>  '::get_metadata',
         'event' => 'click',
-      ],
+			],
     ];
 
-    // $form['actions']['submit'] = [
-    //   '#type' => 'submit',
-    //   '#value' => $this->t('More'),
-    // ];
+    $form['#cache'] = [
+      'max-age' => 0
+    ];
 
     return $form;
 
@@ -106,17 +115,24 @@ class Metadata extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
-    // $get = $_GET;
-
-    // $textid = $form_state->getValue('text');
-    // $metadata = $form_state->getValue('metadata');
-
-    // $url = Url::fromRoute('heritage_ui.contentpage', ['textid' => $textid]);
-    // $get['metadata'] = $metadata;
-
-    // $url->setOption('query', $get);
-    // return $form_state->setRedirectUrl($url);
-
   }
 
+  /**
+   * Ajax Callback for the form - it opens the modal form
+   *
+   */
+  function get_metadata($form, $form_state) {
+    $metadata = '';
+    $values = $form_state->getValues();
+    // \Drupal::logger('my_module')->notice('Value of source in submit is: ' . $values['sourceid']);
+    $metadata_string = db_query("SELECT metadata FROM `heritage_field_meta_data` WHERE id = :id", [':id' => $values['sourceid']])->fetchField();
+    $metadata_array = json_decode($metadata_string);
+    foreach($metadata_array as $key => $value) {
+      $metadata = $metadata . $key . ': ' . $value . '<br>';
+    }
+    // Add an AJAX command to open a modal dialog with the metadata as the content.
+    $response = new AjaxResponse();
+    $response->addCommand(new OpenModalDialogCommand(t('More Information on this'), $metadata, ['width' => '555']));	
+    return $response;
+  }
 }

@@ -19,10 +19,12 @@
 function clickFunction($, event) {
     var triggeredBy = event.target.id;
     var triggeredArray = triggeredBy.split("_");
+    console.log("triggered array is" + triggeredArray);
     var level = triggeredArray[0];
     document.getElementById('button-clicked').value = triggeredBy;
     // clicked[0].value = triggeredBy;
     console.log("level is: " + level);
+    console.log("triggered by: " + triggeredBy);
     var navLevelElement = document.getElementsByName(level);
     if(navLevelElement.length != 0) {
         $(navLevelElement[0]).trigger('change');
