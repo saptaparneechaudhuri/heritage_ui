@@ -10,10 +10,7 @@ use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\Core\Language\LanguageInterface;
-use Drupal\Core\Url;
-use Drupal\node\Entity\Node;
 use Drupal\Core\Ajax\InvokeCommand;
-use Drupal\Core\Ajax\ChangedCommand;
 
 /**
  *
@@ -91,7 +88,7 @@ class NavigationLevels extends FormBase {
       $levels = db_query("SELECT field_levels_value FROM `node__field_levels` WHERE entity_id = :textid and bundle = :bundle",
                 [
                   ':textid' => $textid,
-                  ':bundle' => 'heritage_text'
+                  ':bundle' => 'heritage_text',
                 ])->fetchField();
       $form['levels'] = [
         '#type' => 'hidden',
@@ -101,7 +98,7 @@ class NavigationLevels extends FormBase {
       $level_labels = db_query("SELECT field_level_labels_value FROM `node__field_level_labels` WHERE entity_id = :textid and bundle = :bundle",
         [
           ':textid' => $textid,
-          ':bundle' => 'heritage_text'
+          ':bundle' => 'heritage_text',
         ])->fetchField();
       $form['level_labels'] = [
         '#type' => 'hidden',
@@ -133,6 +130,11 @@ class NavigationLevels extends FormBase {
         '#required' => TRUE,
         '#languages' => LanguageInterface::STATE_CONFIGURABLE | LanguageInterface::STATE_SITE_DEFAULT,
         '#default_value' => $langcode,
+        '#ajax' => [
+          'event' => 'change',
+          'wrapper' => 'navigationlevels',
+          'callback' => '::submitFormAjax',
+        ],
       ];
 
       // If an ajax call is made, set the appropriate variables.
@@ -147,25 +149,25 @@ class NavigationLevels extends FormBase {
             $navLevelChangeDirection = $triggeredByArray[1];
             $position_to_change = array_search(ucfirst($navLevleChange), $level_labels_array);
             $currentValue = $form_state->getValue(strtolower(end($level_labels_array)));
-            $position = db_query("SELECT field_position_value FROM `taxonomy_term__field_position` WHERE entity_id = :tid", [':tid' =>$currentValue])->fetchField();
+            $position = db_query("SELECT field_position_value FROM `taxonomy_term__field_position` WHERE entity_id = :tid", [':tid' => $currentValue])->fetchField();
             \Drupal::logger('current_value')->notice('Current Value: ' . $currentValue . ', Position: ' . $position);
             if ($navLevelChangeDirection == 'next') {
               // $default_value = $currentValue + 1;
               $newposition = $this->_get_next_level($textname, $position, 0, $position_to_change);
               $newposition_original = $newposition;
-              $newposition_tid = $newposition; 
+              $newposition_tid = $newposition;
               \Drupal::logger('new_postion_after_calc')->notice('New Position: ' . $newposition);
-              for($l = $levels - 1; $l >= 0; $l--) {
-                $newParents[$l] = db_query("SELECT parent_target_id FROM `taxonomy_term__parent` WHERE entity_id = :tid", [':tid' =>$newposition_tid])->fetchField();
+              for ($l = $levels - 1; $l >= 0; $l--) {
+                $newParents[$l] = db_query("SELECT parent_target_id FROM `taxonomy_term__parent` WHERE entity_id = :tid", [':tid' => $newposition_tid])->fetchField();
                 $newposition_tid = $newParents[$l];
               }
             }
             if ($navLevelChangeDirection == 'prev') {
               $newposition = $this->_get_prev_level($textname, $position, 0, $position_to_change);
               $newposition_original = $newposition;
-              $newposition_tid = $newposition; 
-              for($l = $levels - 1; $l >= 0; $l--) {
-                $newParents[$l] = db_query("SELECT parent_target_id FROM `taxonomy_term__parent` WHERE entity_id = :tid", [':tid' =>$newposition_tid])->fetchField();
+              $newposition_tid = $newposition;
+              for ($l = $levels - 1; $l >= 0; $l--) {
+                $newParents[$l] = db_query("SELECT parent_target_id FROM `taxonomy_term__parent` WHERE entity_id = :tid", [':tid' => $newposition_tid])->fetchField();
                 $newposition_tid = $newParents[$l];
               }
             }
@@ -174,9 +176,9 @@ class NavigationLevels extends FormBase {
           }
           else {
             $valueTriggered = $form_state->getTriggeringElement()['#value'];
-            $keyTriggered = array_search (ucfirst($triggeredBy), $level_labels_array);
+            $keyTriggered = array_search(ucfirst($triggeredBy), $level_labels_array);
             if ($keyTriggered != $levels - 1) {
-              for ($i = $keyTriggered+1; $i < $levels; $i++) {
+              for ($i = $keyTriggered + 1; $i < $levels; $i++) {
                 $levelToChange[$i] = $level_labels_array[$i];
               }
             }
@@ -187,108 +189,108 @@ class NavigationLevels extends FormBase {
           }
         }
       }
-      
-      // Create the level fields
+
+      // Create the level fields.
       for ($j = 0; $j < $levels; $j++) {
         $levelName = strtolower($level_labels_array[$j]);
         $units = [];
-        // if ($j != 0) {
-          // If the drop down values are changed, get the no.of sublevels.
-          // if (isset($levelToChange) && $level_labels_array[$j] == $levelToChange && $j != ($levels - 1)) {
-          if (count($levelToChange) > 0 && array_search($level_labels_array[$j], $levelToChange)) {
-            if ($j == ($levels - 1)) {
-              if ($keyTriggered == $j) {
-                $id = $form_state->getValue(strtolower($level_labels_array[$j-1]));
-                $units = $this->get_sub_levels($id, $textname);
-                $default_value = $valueTriggered;
-              }
-              else {
-                // $units = $this->get_sub_levels($valueTriggered, $textname);
-                if ($keyTriggered != $j-1) {
-                  $id = $form_state->getValue(strtolower($level_labels_array[$j-1]));
-                   \Drupal::logger('in_form_build_key_triggered_if')->notice('<pre><code>' . print_r($id, TRUE) . '</code></pre>');
-                }
-                else {
-                  $id = $valueTriggered;
-                  \Drupal::logger('in_form_build_key_triggered_else')->notice('<pre><code>' . print_r($id, TRUE) . '</code></pre>');
-                }
-                $units = $this->get_sub_levels($id, $textname);
-                $first_element = key($units);
-                $default_value = $first_element;
-              }
+        // If ($j != 0) {
+        // If the drop down values are changed, get the no.of sublevels.
+        // if (isset($levelToChange) && $level_labels_array[$j] == $levelToChange && $j != ($levels - 1)) {.
+        if (count($levelToChange) > 0 && array_search($level_labels_array[$j], $levelToChange)) {
+          if ($j == ($levels - 1)) {
+            if ($keyTriggered == $j) {
+              $id = $form_state->getValue(strtolower($level_labels_array[$j - 1]));
+              $units = $this->get_sub_levels($id, $textname);
+              $default_value = $valueTriggered;
             }
             else {
-              if ($j != 0) {
-                $id = $form_state->getValue(strtolower($level_labels_array[$j-1]));
-                $units = $this->get_sub_levels($id, $textname);
-                $first_element = key($units);
-                $default_value = $first_element;
+              // $units = $this->get_sub_levels($valueTriggered, $textname);
+              if ($keyTriggered != $j - 1) {
+                $id = $form_state->getValue(strtolower($level_labels_array[$j - 1]));
+                \Drupal::logger('in_form_build_key_triggered_if')->notice('<pre><code>' . print_r($id, TRUE) . '</code></pre>');
               }
               else {
-                $units = $this->get_sub_levels(0, $textname);
-                $default_value = $valueTriggered;
+                $id = $valueTriggered;
+                \Drupal::logger('in_form_build_key_triggered_else')->notice('<pre><code>' . print_r($id, TRUE) . '</code></pre>');
               }
+              $units = $this->get_sub_levels($id, $textname);
+              $first_element = key($units);
+              $default_value = $first_element;
             }
           }
           else {
-            // If there are no ajax calls, load the default values to form elements.
-            if (empty($form_state->getTriggeringElement())) {
-              if ($j !=0 ) {
-                $id = $form_state->getValue(strtolower($level_labels_array[$j-1]));
-              }
-              else {
-                $id = 0;
-              }
-            }
-            // Otherwise get the changed value and set the form fields appropriately.
-            else {
-              if ($j != 0) {
-                $id = $form_state->getValue(strtolower($level_labels_array[$j-1]));
-              }
-              else {
-                $id = 0;
-              }
-            }
-            $units = $this->get_sub_levels($id, $textname);
-            $first_element = key($units);
-            if (isset($ajaxCalledBy) && $ajaxCalledBy == 'navigation') {
-              $units = $this->get_sub_levels($newParents[$j], $textname);
-              if ($j != ($levels -1)) {
-                $default_value = $newParents[$j+1];
-              }
-              else {
-                $default_value = $newposition_original;
-              }
-            }
-            else if (count($levelToChange) == 0) {
+            if ($j != 0) {
+              $id = $form_state->getValue(strtolower($level_labels_array[$j - 1]));
+              $units = $this->get_sub_levels($id, $textname);
+              $first_element = key($units);
               $default_value = $first_element;
-            } 
+            }
             else {
-              $default_value = $form_state->getValue(strtolower($level_labels_array[$j]));
+              $units = $this->get_sub_levels(0, $textname);
+              $default_value = $valueTriggered;
             }
           }
-          $div = strtolower($level_labels_array[$j]) . '-wrapper';
-          $formDiv = strtolower($level_labels_array[$j]) . '_wrapper';
-          $form['text_info'][$formDiv] = [
-            '#type' => 'container',
-            '#prefix' => '<div id="' .$div. '">',
-            '#suffix' => '</div>',
-          ]; 
-          $form['text_info'][$formDiv][$levelName] = [
-            '#type' => 'select',
-            '#title' => $this->t('Select ' . $level_labels_array[$j]),
-            '#required' => TRUE,
-            '#options' => $units,
-            '#id' => 'edit-'.$levelName,
+        }
+        else {
+          // If there are no ajax calls, load the default values to form elements.
+          if (empty($form_state->getTriggeringElement())) {
+            if ($j != 0) {
+              $id = $form_state->getValue(strtolower($level_labels_array[$j - 1]));
+            }
+            else {
+              $id = 0;
+            }
+          }
+          // Otherwise get the changed value and set the form fields appropriately.
+          else {
+            if ($j != 0) {
+              $id = $form_state->getValue(strtolower($level_labels_array[$j - 1]));
+            }
+            else {
+              $id = 0;
+            }
+          }
+          $units = $this->get_sub_levels($id, $textname);
+          $first_element = key($units);
+          if (isset($ajaxCalledBy) && $ajaxCalledBy == 'navigation') {
+            $units = $this->get_sub_levels($newParents[$j], $textname);
+            if ($j != ($levels - 1)) {
+              $default_value = $newParents[$j + 1];
+            }
+            else {
+              $default_value = $newposition_original;
+            }
+          }
+          elseif (count($levelToChange) == 0) {
+            $default_value = $first_element;
+          }
+          else {
+            $default_value = $form_state->getValue(strtolower($level_labels_array[$j]));
+          }
+        }
+        $div = strtolower($level_labels_array[$j]) . '-wrapper';
+        $formDiv = strtolower($level_labels_array[$j]) . '_wrapper';
+        $form['text_info'][$formDiv] = [
+          '#type' => 'container',
+          '#prefix' => '<div id="' . $div . '">',
+          '#suffix' => '</div>',
+        ];
+        $form['text_info'][$formDiv][$levelName] = [
+          '#type' => 'select',
+          // '#title' => $this->t('Select ' . $level_labels_array[$j]),
+          '#required' => TRUE,
+          '#options' => $units,
+          '#id' => 'edit-' . $levelName,
             // '#value' => $default_value,
-            '#default_value' => $default_value,
-          ];
-          $form_state->setValue($levelName , $default_value);
-          $form['text_info'][$levelName .'_wrapper'][$levelName]['#ajax'] = [
-            'event' => 'change',
-            'wrapper' => 'navigationlevels',
-            'callback' => '::submitFormAjax',
-          ];
+          '#default_value' => $default_value,
+        ];
+        $form_state->setValue($levelName, $default_value);
+        $form['text_info'][$levelName . '_wrapper'][$levelName]['#ajax'] = [
+          'event' => 'change',
+          'wrapper' => 'navigationlevels',
+          'callback' => '::submitFormAjax',
+        ];
       }
     }
     // Navigation Buttons.
@@ -296,13 +298,13 @@ class NavigationLevels extends FormBase {
     $form['navbuttons']['#prefix'] = '<div id="navigationButtons">';
     $form['navbuttons']['#suffix'] = '</div>';
     for ($l = $levels; $l > 0; $l--) {
-      $levelName = strtolower($level_labels_array[$l-1]);
+      $levelName = strtolower($level_labels_array[$l - 1]);
       $textOnButton = '';
       for ($k = 1; $k <= $l; $k++) {
         $textOnButton = $textOnButton . '&lt;';
       }
       $label = $levelName . '_prev_navigation';
-      
+
       $wrapper = $levelName . '_wrapper';
       $form['navbuttons'][$label] = [
         '#type' => 'html_tag',
@@ -314,7 +316,7 @@ class NavigationLevels extends FormBase {
           'name' => $this->t($label),
           'id' => $this->t($label),
           'wrapper' => 'navigationlevels',
-        ], 
+        ],
         '#attached' => [
           'library' => [
             'heritage_ui/heritage_ui_library',
@@ -326,13 +328,13 @@ class NavigationLevels extends FormBase {
       $drupalSettings++;
     }
     for ($l = 1; $l <= $levels; $l++) {
-      $levelName = strtolower($level_labels_array[$l-1]);
+      $levelName = strtolower($level_labels_array[$l - 1]);
       $textOnButton = '';
       for ($k = 1; $k <= $l; $k++) {
         $textOnButton = $textOnButton . '&gt;';
       }
       $label = $levelName . '_next_navigation';
-      
+
       $wrapper = $levelName . '_wrapper';
       $form['navbuttons'][$label] = [
         '#type' => 'html_tag',
@@ -344,7 +346,7 @@ class NavigationLevels extends FormBase {
           'name' => $this->t($label),
           'id' => $this->t($label),
           'wrapper' => 'navigationlevels',
-        ], 
+        ],
         '#attached' => [
           'library' => [
             'heritage_ui/heritage_ui_library',
@@ -361,11 +363,11 @@ class NavigationLevels extends FormBase {
       '#name' => 'button_clicked',
       '#attributes' => [
         'id' => 'button-clicked',
-      ]
+      ],
     ];
     return $form;
   }
-  
+
   /**
    *
    */
@@ -377,7 +379,7 @@ class NavigationLevels extends FormBase {
     $triggeredBy = $_POST['button_clicked'];
     if ($triggeredBy == 'default') {
       $triggeredBy = $form_state->getTriggeringElement()['#name'];
-      if ($triggeredBy != $level_labels_array[$levels-1]) {
+      if ($triggeredBy != $level_labels_array[$levels - 1]) {
         $response = $this->submitFormAjax2($form, $form_state);
       }
       else {
@@ -389,7 +391,6 @@ class NavigationLevels extends FormBase {
     }
     return $response;
   }
-
 
   /**
    *
@@ -420,7 +421,7 @@ class NavigationLevels extends FormBase {
     foreach ($values as $key => $value) {
       for ($i = 0; $i < $levels; $i++) {
         if (strtolower($key) == strtolower($level_labels_array[$i])) {
-         \Drupal::logger('in_submit')->notice('Key is: ' . $key . ' Value is: ' . $value);
+          \Drupal::logger('in_submit')->notice('Key is: ' . $key . ' Value is: ' . $value);
           if (isset($triggeredByArray[1]) && isset($triggeredByArray[2]) && $triggeredByArray[2] == 'navigation') {
             $newValue[] = $value;
             $levelToChange[] = '#edit-' . $key;
@@ -441,23 +442,18 @@ class NavigationLevels extends FormBase {
       foreach ($fields as $field_name) {
         $params[$field_name] = 1;
       }
-     
+
     }
     else {
       $moolshloka_source_id = db_query("SELECT id FROM `heritage_source_info` WHERE text_id = :textid AND type = 'moolam' AND format = 'text'", [':textid' => $textid])->fetchField();
       $field_name = 'field_' . $textname . '_' . $moolshloka_source_id . '_text';
       $params[$field_name] = 1;
-    
-
-
-
-
 
     }
     \Drupal::logger('in_submit')->notice('Position is: ' . $params['position']);
     if (isset($params[$field_name]) && isset($params['position']) && isset($params['language'])) {
       $result = my_module_reponse('http://' . $_SERVER['HTTP_HOST'] . '/api/' . $textid, 'GET', $params);
-    } 
+    }
     $result_json = json_decode($result, TRUE);
     if (isset($_GET['play'])) {
       $list = $_GET['play'];
@@ -471,6 +467,8 @@ class NavigationLevels extends FormBase {
     }
     $result_json['lastlevel'] = strtolower(end($level_labels_array));
     $metadata_form = \Drupal::formBuilder()->getForm('Drupal\heritage_ui\Form\Metadata');
+    // Add the audio play options form
+    $audio_options_form = \Drupal::formBuilder()->getForm('Drupal\heritage_ui\Form\AudioPlay');
     $current_user = \Drupal::currentUser();
     if (in_array('editor', $current_user->getRoles()) || in_array('administrator', $current_user->getRoles())) {
       $allow_edit = 1;
@@ -480,10 +478,12 @@ class NavigationLevels extends FormBase {
     }
     $build = [
       '#theme' => 'text_content',
-      '#data'=> $result_json,
+      '#data' => $result_json,
       '#textid' => $textid,
       '#metadata_form' => $metadata_form,
       '#allow_edit' => $allow_edit,
+      '#audio_options_form' => $audio_options_form,
+      '#cache' => ['max-age' => 0],
     ];
     // $form_state->setRebuild();
     $response = new AjaxResponse();
@@ -494,9 +494,9 @@ class NavigationLevels extends FormBase {
     if (count($newValue) > 0) {
       // $form_state->setRebuild(TRUE);
       $response->addCommand(new ReplaceCommand(NULL, $form));
-      for ($i = 0; $i < count($newValue); $i++) { 
+      for ($i = 0; $i < count($newValue); $i++) {
         $tmp[0] = $newValue[$i];
-        $response->addCommand(new InvokeCommand($levelToChange[$i], 'val' , $tmp));
+        $response->addCommand(new InvokeCommand($levelToChange[$i], 'val', $tmp));
       }
     }
     else {
@@ -518,9 +518,9 @@ class NavigationLevels extends FormBase {
     else {
       $position_array[$position_to_change] = $position_array[$position_to_change] - 1;
       /* if ($position_to_change != ($levels-1)) {
-        for ($i = $position_to_change+1; $i < $levels; $i++) {
-          $position_array[$i] = 1;
-        }
+      for ($i = $position_to_change+1; $i < $levels; $i++) {
+      $position_array[$i] = 1;
+      }
       } */
       $newposition = $this->_get_exact_position($position_array);
     }
@@ -532,13 +532,13 @@ class NavigationLevels extends FormBase {
         ':bundle' => $textname,
       ]
     )->fetchField();
-    if ($newTid != null && $newTid > 0) {
+    if ($newTid != NULL && $newTid > 0) {
       \Drupal::logger('get_prev_level')->notice('Next tid is: ' . $newTid . ', Next Position is: ' . $newposition);
       return $newTid;
     }
     else {
       if ($position_to_change != 0) {
-         $position = $this->_get_last_level($textname, $position, $position_to_change);
+        $position = $this->_get_last_level($textname, $position, $position_to_change);
       }
       else {
         // $position_array[$position_to_change] = $this->_get_last_level($textname, $position, $position_to_change);
@@ -558,8 +558,8 @@ class NavigationLevels extends FormBase {
     $position_array = explode(".", $position);
     $levels = count($position_array);
     $position_array[$position_to_change] = $position_array[$position_to_change] + 1;
-    if ($position_to_change != ($levels-1)) {
-      for ($i = $position_to_change+1; $i < $levels; $i++) {
+    if ($position_to_change != ($levels - 1)) {
+      for ($i = $position_to_change + 1; $i < $levels; $i++) {
         $position_array[$i] = 1;
       }
     }
@@ -572,7 +572,7 @@ class NavigationLevels extends FormBase {
         ':bundle' => $textname,
       ]
     )->fetchField();
-    if ($newTid != null && $newTid > 0) {
+    if ($newTid != NULL && $newTid > 0) {
       // \Drupal::logger('get_next_level')->notice('Next tid is: ' . $newTid . ', Next Position is: ' . $newposition);
       return $newTid;
     }
@@ -589,6 +589,9 @@ class NavigationLevels extends FormBase {
     }
   }
 
+  /**
+   *
+   */
   public function _get_exact_position($position_array) {
     $newposition = '';
     for ($j = 0; $j < count($position_array); $j++) {
@@ -602,6 +605,9 @@ class NavigationLevels extends FormBase {
     return trim($newposition);
   }
 
+  /**
+   *
+   */
   public function _get_last_level($textname, $position, $position_to_change) {
     $position_array = explode(".", $position);
     \Drupal::logger('_get_last_level')->notice('Position _get_last_level: ' . $position);
@@ -616,7 +622,7 @@ class NavigationLevels extends FormBase {
       $position_array[$position_to_change - 1] = $position_array[$position_to_change - 1] - 1;
       \Drupal::logger('_get_last_level_new_position')->notice('<pre><code>' . print_r($position_array[$position_to_change - 1], TRUE) . '</code></pre>');
       \Drupal::logger('_get_last_level_new_position')->notice('<pre><code>' . print_r($position_array, TRUE) . '</code></pre>');
-      if ($position_array[$position_to_change - 1] != 0 ) {
+      if ($position_array[$position_to_change - 1] != 0) {
         $parentPositionArray = $position_array;
         array_pop($parentPositionArray);
         \Drupal::logger('_get_last_level_parent_position_array')->notice('<pre><code>' . print_r($parentPositionArray, TRUE) . '</code></pre>');
@@ -629,7 +635,7 @@ class NavigationLevels extends FormBase {
             ':bundle' => $textname,
           ]
         )->fetchField();
-        \Drupal::logger('_get_last_level_new_position')->notice('Position Prent Tid: ' . $prevPositionParentTid . ', Position parent id:' . $position[$position_to_change-1]);
+        \Drupal::logger('_get_last_level_new_position')->notice('Position Prent Tid: ' . $prevPositionParentTid . ', Position parent id:' . $position[$position_to_change - 1]);
         $newposition = db_query("SELECT field_position_value p FROM `taxonomy_term__field_position` WHERE entity_id IN (SELECT entity_id FROM `taxonomy_term__parent` WHERE parent_target_id = :parent) ORDER BY entity_id DESC LIMIT 1", [':parent' => $prevPositionParentTid])->fetchField();
       }
       else {
@@ -641,6 +647,7 @@ class NavigationLevels extends FormBase {
     \Drupal::logger('_get_last_level_new_position')->notice('Position _get_last_level: ' . $newposition);
     return $newposition;
   }
+
   /**
    *
    */
@@ -668,7 +675,7 @@ class NavigationLevels extends FormBase {
     foreach ($unitsInThisLevel as $value) {
       $subLevels[$value->tid] = $value->name;
     }
-    
+
     return $subLevels;
   }
 

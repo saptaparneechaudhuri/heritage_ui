@@ -1,5 +1,8 @@
 heritage_ui_library:
   version: 1.x
+  css:
+    theme:
+      css/heritage_ui.css: {}
   js:
     js/navigation.js: {}
     js/continuousplay.js: {}
@@ -9,4 +12,3 @@ heritage_ui_library:
     - core/drupal
     - core/drupalSettings
     - core/jquery.once
-

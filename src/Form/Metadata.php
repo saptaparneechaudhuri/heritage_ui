@@ -7,11 +7,8 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Path\CurrentPathStack;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Utility\LinkGeneratorInterface;
-use Drupal\Core\Url;
 use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\RedirectCommand;
 use Drupal\Core\Ajax\OpenModalDialogCommand;
-use Drupal\Core\Ajax\CloseModalDialogCommand;
 
 /**
  *
@@ -72,7 +69,7 @@ class Metadata extends FormBase {
    *
    */
   public function buildForm(array $form, FormStateInterface $form_state, $sourceid = NULL) {
-
+    // print_r($sourceid);exit;
     $path = $this->currPath->getPath();
     $arg = explode('/', $path);
     $textid = $arg[2];
@@ -97,13 +94,14 @@ class Metadata extends FormBase {
       '#type' => 'button',
       '#value' => $this->t('More'),
       '#ajax' => [
-        'callback' =>  '::get_metadata',
+        'callback' => '::get_metadata',
         'event' => 'click',
-			],
+        // 'url' => Url::fromRoute('heritage_ui.metadata', ['sourceid' => $sourceid]),
+      ],
     ];
 
     $form['#cache'] = [
-      'max-age' => 0
+      'max-age' => 0,
     ];
 
     return $form;
@@ -118,21 +116,22 @@ class Metadata extends FormBase {
   }
 
   /**
-   * Ajax Callback for the form - it opens the modal form
-   *
+   * Ajax Callback for the form - it opens the modal form.
    */
-  function get_metadata($form, $form_state) {
+  public function get_metadata($form, $form_state) {
     $metadata = '';
     $values = $form_state->getValues();
-    // \Drupal::logger('my_module')->notice('Value of source in submit is: ' . $values['sourceid']);
+    // \Drupal::logger('my_module')->notice('Value of source in Metadat submit is: ' . $values['sourceid']);
     $metadata_string = db_query("SELECT metadata FROM `heritage_field_meta_data` WHERE id = :id", [':id' => $values['sourceid']])->fetchField();
     $metadata_array = json_decode($metadata_string);
-    foreach($metadata_array as $key => $value) {
+    foreach ($metadata_array as $key => $value) {
       $metadata = $metadata . $key . ': ' . $value . '<br>';
     }
+    \Drupal::logger('my_module')->notice('Value of source in Metadat submit is: ' . $metadata);
     // Add an AJAX command to open a modal dialog with the metadata as the content.
     $response = new AjaxResponse();
-    $response->addCommand(new OpenModalDialogCommand(t('More Information on this'), $metadata, ['width' => '555']));	
+    $response->addCommand(new OpenModalDialogCommand(t('More Information on this'), $metadata, ['width' => '555']));
     return $response;
   }
+
 }

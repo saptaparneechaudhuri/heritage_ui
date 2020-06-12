@@ -1,13 +1,11 @@
 .view-welcome {
-	margin-top: 1em;
-	img {
-		width: 100%;
-		border: 3px solid #eee;
-		padding: 3px;
-		border-radius: 5px;
-	}
-	img:hover {
-		border-color: #ddd;
-
+  margin-top: 1em;   img {
+    width: 100%;
+    border: 3px solid #eee;
+    padding: 3px;
+    border-radius: 5px;
+  }
+  img:hover {
+    border-color: #ddd;
 }
 }

@@ -3,8 +3,6 @@
 namespace Drupal\heritage_ui\Plugin\Block;
 
 use Drupal\Core\Block\BlockBase;
-use Drupal\Core\Url;
-use Drupal\Component\Serialization\Json;
 use Drupal\Core\Path\CurrentPathStack;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
@@ -21,7 +19,7 @@ use Drupal\Core\Utility\LinkGeneratorInterface;
  */
 class DisplayMetadata extends BlockBase implements ContainerFactoryPluginInterface {
 
-    /**
+  /**
    * Drupal\Core\Path\CurrentPathStack definition.
    *
    * @var \Drupal\Core\Path\CurrentPathStack
@@ -63,7 +61,6 @@ class DisplayMetadata extends BlockBase implements ContainerFactoryPluginInterfa
     );
   }
 
-
   /**
    *
    */
@@ -77,48 +74,22 @@ class DisplayMetadata extends BlockBase implements ContainerFactoryPluginInterfa
     // $sourceid = 10589;
     // global $_SERVER;
     // $response = NULL;
-
-
-
-
-
     // // todo get the sourceid from the textid
-
-    //  if (isset($_GET['metadata'])) {
+    // if (isset($_GET['metadata'])) {
     //   $metadata = $_GET['metadata'];
     //   $build = [];
     //   $param['metadata'] = $metadata;
-    //   $sourceid = 10589;
-
-
-    //   $response =  my_module_reponse('http://' . $_SERVER['HTTP_HOST'] . '/api/source/' . $sourceid . '/status', 'GET', $param);
-
-    //   if ($response) {
+    //   $sourceid = 10589;.
+    // $response =  my_module_reponse('http://' . $_SERVER['HTTP_HOST'] . '/api/source/' . $sourceid . '/status', 'GET', $param);
+    // if ($response) {
     //      $result = json_decode($response, TRUE);
     //       //print("<pre>");print_r($result);exit;
-
-    //      $build['#markup'] = render($result);
-
-
-
-
-
-    //   } // if response
-
-
-
+    // $build['#markup'] = render($result);
+    // } // if response
     // } // if metadata
-
-
-
-
-
-
-
-  // else {
+    // Else {
     $build['form'] = $builtForm;
- // }
-
+    // }
     $build['#cache']['max-age'] = 0;
     return $build;
 

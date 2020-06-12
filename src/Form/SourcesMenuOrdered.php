@@ -12,7 +12,7 @@ use Drupal\Core\Url;
 /**
  *
  */
-class SourcesMenu extends FormBase {
+class SourcesMenuOrdered extends FormBase {
 
   /**
    * Drupal\Core\Path\CurrentPathStack definition.
@@ -64,6 +64,8 @@ class SourcesMenu extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state, $textid = NULL) {
 
     $sources_menu = [];
+    $sources_menu_audio = [];
+    $sources_menu_text = [];
     $sources = '';
     $selected_sourceids = [];
     $default_values = [];
@@ -73,34 +75,41 @@ class SourcesMenu extends FormBase {
     // Get the user id.
     $userid = \Drupal::currentUser()->id();
     // Fetch all the available sources.
-    //$available_sources_audio = db_query("SELECT * FROM `heritage_source_info` WHERE text_id = :textid AND format = :format ORDER BY language DESC", [':textid' => $textid, ':format' => 'audio'])->fetchAll();
+    $available_sources_audio = db_query("SELECT * FROM `heritage_source_info` WHERE text_id = :textid AND format = :format ORDER BY type", [':textid' => $textid, ':format' => 'audio'])->fetchAll();
     // the audios should come before the texts in the text boxes
     
-    $available_sources = db_query("SELECT * FROM `heritage_source_info` WHERE text_id = :textid ORDER BY format ASC", [':textid' => $textid])->fetchAll();
+   // $available_sources = db_query("SELECT * FROM `heritage_source_info` WHERE text_id = :textid ORDER BY format ASC", [':textid' => $textid])->fetchAll();
 
     
 
 
-    // if (count($available_sources_audio) > 0) {
-    //   foreach ($available_sources_audio as $source) {
-    //     if ($source->type == 'moolam' && $source->format == 'audio') {
-    //       $moolid = $source->id;
-    //     }
-    //     $sources_menu[$source->id] = $source->title;
-    //   }
-    // }
+    if (count($available_sources_audio) > 0) {
+      foreach ($available_sources_audio as $source) {
+        if ($source->type == 'moolam' && $source->format == 'audio') {
+          $moolid = $source->id;
+        }
+        $sources_menu_audio[$source->id] = $source->title;
+      }
+    }
 
-    // TODO: Dont display audio sources.
-   // $available_sources = db_query("SELECT * FROM `heritage_source_info` WHERE text_id = :textid AND format = :format ORDER BY language DESC", [':textid' => $textid, ':format' => 'text'])->fetchAll();
+    // Display Text Sources.
+    $available_sources_text = db_query("SELECT * FROM `heritage_source_info`WHERE text_id = :textid AND format = :format ORDER BY id ASC", [':textid' => $textid, ':format' => 'text'])->fetchAll();
 
-    if (count($available_sources) > 0) {
-      foreach ($available_sources as $source) {
+   
+   
+
+
+    if (count($available_sources_text) > 0) {
+      foreach ($available_sources_text as $source) {
         if ($source->type == 'moolam' && $source->format == 'text') {
           $moolid = $source->id;
         }
-        $sources_menu[$source->id] = $source->title;
+        $sources_menu_text[$source->id] = $source->title;
       }
     }
+
+    // See the format of the sources
+    
 
     // Check the user id here.
     $userid = \Drupal::currentUser()->id();
@@ -133,13 +142,29 @@ class SourcesMenu extends FormBase {
       '#type' => 'hidden',
       '#value' => $textid,
     ];
-    $form['sources_menu'] = [
+
+    $form['sources_menu_audio'] = [
       '#type' => 'checkboxes',
-      '#title' => $this->t('Audios and Texts'),
-      '#options' => $sources_menu,
+      '#title' => $this->t('Audios'),
+      '#options' => $sources_menu_audio,
       '#default_value' => $selected_sourceids,
       '#multiple' => TRUE,
     ];
+    $form['sources_menu_text'] = [
+      '#type' => 'checkboxes',
+      '#title' => $this->t('Texts'),
+      '#options' => $sources_menu_text,
+      '#default_value' => $selected_sourceids,
+      '#multiple' => TRUE,
+    ];
+   // $sources_menu = array_merge($sources_menu_texts, $sources_menu_audio);
+    // $form['sources_menu'] = [
+    //   '#type' => 'hidden',
+    //  // '#title' => isset($title_flag) ? $this->t('Audios') : 'Texts',
+    //   '#options' => $sources_menu,
+    //   // '#default_value' => $selected_sourceids,
+    //    '#multiple' => TRUE,
+    // ];
 
     $form['user'] = [
       '#type' => 'hidden',
@@ -184,10 +209,17 @@ class SourcesMenu extends FormBase {
     $audio_button_flag = [];
 
     // Select the sourceid from the selectes checkboxes.
-    $var1 = $form_state->getValue('sources_menu');
-    $sources = array_filter($var1);
-    // print("<pre>");print_r($sourceid);exit;
+    $var1 = $form_state->getValue('sources_menu_audio');
+
+    $sources_audio = array_filter($var1);
+    // print("<pre>");print_r($sources);exit;
     // $sourceid = [10586,10589];.
+    $var2 = $form_state->getValue('sources_menu_text');
+    $sources_text = array_filter($var2);
+
+    $sources = array_merge($sources_audio,$sources_text);
+    //print_r($sources);exit;
+    
     $sourceid = select_sources($sources);
 
     // ***** USER PERSONALIZARION ************
@@ -292,3 +324,4 @@ class SourcesMenu extends FormBase {
   }
 
 }
+                 

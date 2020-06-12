@@ -1,0 +1,111 @@
+body.mbase-child-theme.navbar-is-default header#navbar {
+  margin-bottom: 10px;
+  z-index: 1000;
+  border-radius: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  margin-top: 0 !important;
+}
+.grid-image {
+  margin: 0;
+  display: block;
+  text-align: center;
+}
+
+.grid-image h3 {
+  position: relative;
+  text-align: center;
+  bottom: 100px;
+  padding: 5px;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 16px;
+  font-family: 'Open Sans',Helvetica Neue,Arial,sans-serif !important;
+  text-transform: capitalize;
+}
+.grid-image h3 a {
+  color: #fff;
+}
+.header-container .header.region--gray-background {
+  background-color: #064acb !important;
+}
+.header-container a {
+  color: #fff !important;
+  font-family: "EB Garamond script=all rev=2", "Adobe Blank";
+  letter-spacing: 2px;
+}
+.headings-wide-spacing-enabled h1,
+.headings-wide-spacing-enabled h2,
+.headings-wide-spacing-enabled h3,
+.headings-wide-spacing-enabled h4,
+.headings-wide-spacing-enabled h5,
+.headings-wide-spacing-enabled h6 {
+  letter-spacing: 2px !important;
+  text-transform: inherit !important;
+  font-family: 'Open Sans',Helvetica Neue,Arial,sans-serif !important;
+}
+/* div#navigationButtons {
+    width: 50% !important;
+    font-size: center;
+}
+div#text-info .js-form-item {
+    width: 30% !important;
+    display: inherit;
+    float: left;
+    margin-right: 4%;
+}*/
+a.button,
+.button > a,
+input[type="submit"],
+input[type="reset"],
+input[type="button"] {
+  background-color: #f3a953 !important;
+}
+div#navigationButtons input {
+  padding: 10px;
+  margin: 1%;
+  font-size: 15px;
+  font-weight: bold;
+}
+
+
+
+/*********Front Page*********/
+.header-container ul.menu li:hover {
+  background: #0b44b0;
+}
+
+/*remove padding to bring the menu down*/
+nav#block-showcase-lite-main-menu {
+  /*  border: 1px solid black;*/
+  padding-top: 5%;
+}
+
+/* Site branding size */
+
+.site-name.site-branding__name a {
+  font-size: 40px;
+}
+
+/* Opacity of header on scroll */
+
+.onscroll .header.js-fixed {
+  opacity: 0.9 !important;
+}
+/**************************** Manage All Texts Page ***************************/
+
+/* Titles for texts decoration */
+.view-manage-all-texts.view-id-manage_all_texts a {
+  margin: 0.5% auto;
+  padding: 5px;
+  width: 80%;
+  text-align: center;
+  border: 1px solid #e8e8e8;
+  box-shadow: 0 4px 8px 0 rgb(169, 169, 169), 0 6px 20px 0 rgba(5, 74, 203, 0.06);
+}
+
+/* Title decoration */
+div#block-showcase-lite-page-title h1 {
+  color: #054acb;
+  text-align: center;
+}

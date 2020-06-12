@@ -8,8 +8,17 @@ heritage_ui.contentpage:
 heritage_ui.sourcesmenu:
   path: '/text/{textid}/sources'
   defaults:
-    _form: '\Drupal\heritage_ui\Form\SourcesMenu'
+    _form: '\Drupal\heritage_ui\Form\SourcesMenuOrdered'
     _title: 'Sources Available'
   requirements:
     _permission: 'access content'
+
+heritage_ui.metadata:
+  path: '/text/{sourceid}/metadata'
+  defaults:
+    _controller: '\Drupal\heritage_ui\Controller\HeritageTextContent::metadata'
+    _title: 'Metadata Information'
+  requirements:
+    _permission: 'access content'
+
 

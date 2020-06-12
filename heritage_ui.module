@@ -107,12 +107,11 @@ function heritage_ui_theme($existing, $type, $theme, $path) {
         'data' => NULL,
         'metadata_form' => NULL,
         'allow_edit' => NULL,
+        'audio_options_form' => NULL,
       ],
     ],
   ];
 }
-
-
 
 /**
  *
@@ -138,6 +137,3 @@ function calculate_sublevel_number($textname, $chapter_tid) {
   return $sublevels;
 
 }
-
-
-

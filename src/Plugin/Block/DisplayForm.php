@@ -4,7 +4,6 @@ namespace Drupal\heritage_ui\Plugin\Block;
 
 use Drupal\Core\Block\BlockBase;
 
-
 /**
  * Provides a block to Display Sources of a Heritage Text, .
  *
@@ -14,28 +13,20 @@ use Drupal\Core\Block\BlockBase;
  *   category = @Translation("Custom")
  * )
  */
-
 class DisplayForm extends BlockBase {
-
 
   /**
    * {@inheritdoc}
    */
   public function build() {
-  	$builtForm = \Drupal::formBuilder()->getForm('Drupal\heritage_ui\Form\DisplayCheckBoxes');
+    $builtForm = \Drupal::formBuilder()->getForm('Drupal\heritage_ui\Form\DisplayCheckBoxes');
     $build = [];
 
-     $build['form'] = $builtForm;
-    //$build['#markup'] = render($render);
+    $build['form'] = $builtForm;
+    // $build['#markup'] = render($render);
     $build['#cache']['max-age'] = 0;
     return $build;
 
-
-
   }
 
-
-
 }
-
-

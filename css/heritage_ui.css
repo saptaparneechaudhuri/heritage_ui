@@ -1,0 +1,129 @@
+div#navigationButtons {
+  float: right;
+}
+div#edit-text-info {
+  width: 100% !important;
+}
+div#text-info div {
+  float: left;
+  display: block;
+  padding-right: 14px;
+}
+.source-box {
+  border: 1px solid #e8e8e8;
+  box-shadow: darkgrey 0px 2px 0px 0px;
+  text-align: center;
+  margin-bottom: 3%;
+  padding: 2%;
+}
+a.edit-text:before {
+  content: "\f040 ";
+  font-family: FontAwesome;
+  font-size: 18px;
+  color: #B91727;
+  padding-right: 5px;
+  font-weight: bold;
+}
+a.more:before {
+  content: "\f05a";
+  font-family: FontAwesome;
+  font-size: 18px;
+  color: #f88e13;
+  padding-right: 5px;
+  font-weight: bold;
+}
+#source-controls {
+  margin-top: 2%;
+  padding: 3%;
+}
+a.more.use-ajax {
+  float: right;
+  color: #f88e13 !important;
+}
+a.edit-text {
+  float: left;
+  color: #B91727 !important;
+}
+
+/* Decoration for Download Text link */
+
+div#block-downloadtexts a {
+  font-weight: bold;
+  text-decoration: underline;
+  color: #054acb;
+  font-size: 18px;
+}
+
+/*Decoration for Sources Block*/
+
+div.block-heritage-sources-menu {
+  border: 1px solid #e0e0d8;
+  width: 100%;
+  margin: 0 auto;
+  /* box-shadow: 0 4px 8px 0 rgb(169, 169, 169), 0 6px 20px 0 rgba(5, 74, 203, 0.06); */
+  margin-bottom: 3%;
+}
+div.block-heritage-sources-menu form {
+  padding: 4px;
+  margin-bottom: 5px;
+}
+div.block-heritage-sources-menu .block-title {
+  margin: 0 !important;
+}
+
+div#block-sourcesofheritagetextinmenu-2 h2 {
+  width: 100%;
+  padding: 5px;
+  color: #054acb;
+  font-size: 1.5em;
+}
+
+/* Content in the sources block */
+form#heritage-ui-sources-menu {
+  margin-left: 2%;
+}
+
+/*Button in the sources block*/
+input#edit-submit--2 {
+  margin-left: 40%;
+}
+
+/* Icon next to download button */
+div#block-downloadtexts a::after {
+  content: "\f019";
+  font-family: FontAwesome;
+  color: black;
+  padding-left: 10px;
+}
+
+/* Info icon nex to more*/
+form#heritage-ui-metadata2::after {
+  content: "\f05a";
+  font-style: FontAwesome;
+  font-family: FontAwesome;
+  font-size: 25px;
+  padding-left: 10px;
+  color: grey;
+}
+
+div#navigationlevels {
+  padding-bottom: 6%;
+}
+div#navigationButtons .button {
+  background: #366ED8;
+  color: #fff;
+  border: #366ED8;
+  font-weight: 800;
+  margin-top: 1%;
+}
+.block-heritage-sources-menu .collapsiblock {
+  background-color: #e0e0d8;
+  padding-left: 8px;
+}
+
+div .collapsiblockCollapsed {
+  background-size: 10px;
+}
+div#text-info {
+  float: left;
+}

@@ -1,37 +1,87 @@
 {{ attach_library('heritage_ui/heritage_ui_library') }}
+
 <div id="textcontent">
   {% set field = data|slice(2) %}
+  {% set field = field|slice(0, -1) %}
+  {% set show_audio_form = false %}
   {% for item in field %}
-    {% if item.uniqueid > 0 %}
-      <p> {{ item.content|raw }} </p>
-      <div> {{ drupal_form('Drupal\\heritage_ui\\Form\\Metadata', item.uniqueid|raw) }} </div> 
-      {% if allow_edit == 1 %}
-        <p>
-          <a class="edit-text" href="{{ path('heritage_text_manager.editsource', {'sourceid': item.uniqueid}, {'query': {'destination': path('heritage_ui.contentpage', {'textid': textid})}}) }}">{{ 'Edit'|t }}</a>
-        <p>
-      {% endif %}
-    {% endif %}
     {% if item.audio %}
-       {% if data.play.autoplay == 1 %}
-        <audio autoplay controls src= "{{item.audio}}" id = "audio-play">
-          Your browser does not support the
-          <code>audio</code> element.
-        </audio>
-      {% elseif data.play.continuousplay == 1 %}
-        <audio autoplay controls src= "{{item.audio}}" id = "audio-play" onended="continousPlay('{{data.lastlevel}}')">
-          Your browser does not support the
-          <code>audio</code> element.
-        </audio>
-      {% else %}
-        <audio controls src= "{{item.audio}}" id = "audio-play">
-          Your browser does not support the
-          <code>audio</code> element.
-        </audio>
-      {% endif %}
+        {% set show_audio_form = true %}
     {% endif %}
-
   {% endfor %}
 
+  <div class="col-md-12">
+  {% if show_audio_form %}
+       
+  
+    <div class = "source-box audio">
+      {{ audio_options_form  }}
+     
+      
+      {% for item in field %}
+         
+        {% if item.audio %}
+      
+
+          {% if data.play.autoplay == 1 %}
+            <audio autoplay controls src= "{{item.audio}}" id = "audio-play">
+              Your browser does not support the
+              <code>audio</code> element.
+            </audio>
+          {% elseif data.play.continuousplay == 1 %}
+            <audio autoplay controls src= "{{item.audio}}" id = "audio-play" onended="continousPlay('{{data.lastlevel}}')">
+              Your browser does not support the
+              <code>audio</code> element.
+            </audio>
+          {% else %}
+            <audio controls src= "{{item.audio}}" id = "audio-play">
+              Your browser does not support the
+              <code>audio</code> element.
+            </audio>
+          {% endif %}
+          <div id="source-controls">
+           {# {% if allow_edit == 1 %}
+              <a class="edit-text" href="{{ path('heritage_text_manager.editsource', {'sourceid': item.uniqueid}, {'query': {'destination': path('heritage_ui.contentpage', {'textid': textid})}}) }}">{{ 'Edit'|t }}</a>
+            {% endif %} #}
+            <a class="more use-ajax" data-toggle="modal" data-dialog-type="modal" href="{{ path('heritage_ui.metadata', {'sourceid': item.uniqueid}) }}">{{ 'More'|t }}</a>  
+          </div>
+         
+        {% endif %}
+        
+      {% endfor %}
+
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="col-md-6"> 
+  
+    {# <div class="source-box text"> #}
+      {% for item in field %}
+        {% if item.uniqueid and  item.uniqueid > 0 %}
+          {% if item.content %}
+           <div class="source-box text">
+            <p> {{ item.content|raw }} </p>
+            
+            <div id="source-controls">
+              {% if allow_edit == 1 %}
+                 <a class="edit-text" href="{{ path('heritage_text_manager.editsource', {'sourceid': item.uniqueid}, {'query': {'destination': path('heritage_ui.contentpage', {'textid': textid})}}) }}">{{ 'Edit'|t }}</a>
+              {% endif %}
+              <a class="more use-ajax" data-toggle="modal" data-dialog-type="modal" href="{{ path('heritage_ui.metadata', {'sourceid': item.uniqueid}) }}">{{ 'More'|t }}</a>  
+          
+            </div>
+           
+            </div>
+            
+          {% endif %}
+          {% elseif item.content %}
+          
+
+           <p> {% trans %} Content not present. {% endtrans %} </p>
+        {% endif %}
+      {% endfor %}
+   {# </div> #}
+  </div> 
 </div>
 
 

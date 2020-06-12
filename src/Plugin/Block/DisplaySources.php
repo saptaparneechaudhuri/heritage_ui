@@ -7,8 +7,6 @@ use Drupal\Core\Path\CurrentPathStack;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Utility\LinkGeneratorInterface;
-use Drupal\Component\Serialization\Json;
-use Drupal\Core\Url;
 
 /**
  * Provides a block to Display Sources of a Heritage Text, .
@@ -66,39 +64,37 @@ class DisplaySources extends BlockBase implements ContainerFactoryPluginInterfac
    * {@inheritdoc}
    */
   public function build() {
-    $builtForm = \Drupal::formBuilder()->getForm('Drupal\heritage_ui\Form\SourcesMenu');
+   // $builtForm = \Drupal::formBuilder()->getForm('Drupal\heritage_ui\Form\SourcesMenu');
+    $builtForm = \Drupal::formBuilder()->getForm('Drupal\heritage_ui\Form\SourcesMenuOrdered');
+
     $build = [];
-    $path = $this->currPath->getPath();
+    /* $path = $this->currPath->getPath();
     $arg = explode('/', $path);
     $textid = $arg[2];
     $url = Url::fromRoute('heritage_ui.sourcesmenu', ['textid' => $textid]);
-
-    // This is to keep the check boxes ticked.
     if (isset($_GET['source'])) {
-      $url->setOption('query',[
-           'source' => $_GET['source'],
-       ]);
+    $url->setOption('query',[
+    'source' => $_GET['source'],
+    ]);
     }
     $build['link'] = [
-      '#title' => 'Select Sources',
-      '#type' => 'link',
-      '#url' => $url,
-      '#attributes' => [
-        'class' => ['use-ajax'],
-        'data-dialog-type' => 'dialog',
-        'data-dialog-renderer' => 'off_canvas',
-        'data-dialog-options' => Json::encode(['width' => 400]),
-      ],
-      '#attached' => [
-        'library' => [
-          'core/drupal.dialog.ajax',
-        ],
-      ],
-    ];
+    '#title' => 'Select Sources',
+    '#type' => 'link',
+    '#url' => $url,
+    '#attributes' => [
+    'class' => ['use-ajax'],
+    'data-dialog-type' => 'dialog',
+    'data-dialog-renderer' => 'off_canvas',
+    'data-dialog-options' => Json::encode(['width' => 400]),
+    ],
+    '#attached' => [
+    'library' => [
+    'core/drupal.dialog.ajax',
+    ],
+    ],
+    ]; */
     $build['#cache']['max-age'] = 0;
-    /* return $build; 
     $build['form'] = $builtForm;
-    $build['#cache']['max-age'] = 0; */
     return $build;
   }
 

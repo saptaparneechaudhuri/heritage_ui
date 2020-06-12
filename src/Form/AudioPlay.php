@@ -83,6 +83,8 @@ class AudioPlay extends FormBase {
       'continuousplay' => $this->t('Continuous Play'),
     ];
 
+    $form['#cache'] = ['max-age' => 0];
+
     $form['text'] = [
       '#type' => 'hidden',
       '#value' => $textid,
@@ -98,10 +100,10 @@ class AudioPlay extends FormBase {
     $form['actions']['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Play'),
-      // Hides submit button because auto submit is used
-    '#attributes' => [
-      'style' => ['display: none;'],
-    ],
+      // Hides submit button because auto submit is used.
+      '#attributes' => [
+        'style' => ['display: none;'],
+      ],
     ];
 
     return $form;
